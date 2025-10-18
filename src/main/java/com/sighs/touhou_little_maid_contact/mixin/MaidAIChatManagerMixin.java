@@ -5,15 +5,13 @@ import com.github.tartaricacid.touhoulittlemaid.ai.manager.entity.MaidAIChatData
 import com.github.tartaricacid.touhoulittlemaid.ai.manager.entity.MaidAIChatManager;
 import com.github.tartaricacid.touhoulittlemaid.ai.manager.response.ResponseChat;
 import com.github.tartaricacid.touhoulittlemaid.ai.service.ErrorCode;
-import com.github.tartaricacid.touhoulittlemaid.ai.service.llm.LLMClient;
-import com.github.tartaricacid.touhoulittlemaid.ai.service.llm.LLMConfig;
-import com.github.tartaricacid.touhoulittlemaid.ai.service.llm.LLMMessage;
-import com.github.tartaricacid.touhoulittlemaid.ai.service.llm.LLMSite;
+import com.github.tartaricacid.touhoulittlemaid.ai.service.llm.*;
 import com.github.tartaricacid.touhoulittlemaid.ai.service.llm.openai.response.Message;
 import com.github.tartaricacid.touhoulittlemaid.config.subconfig.AIConfig;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.mojang.logging.LogUtils;
 import com.sighs.touhou_little_maid_contact.api.IMaidAIChatManager;
+import com.sighs.touhou_little_maid_contact.config.AILetterConfig;
 import com.sighs.touhou_little_maid_contact.data.MaidLetterRule;
 import com.sighs.touhou_little_maid_contact.llm.LetterJsonParser;
 import com.sighs.touhou_little_maid_contact.util.PromptUtil;
@@ -35,10 +33,6 @@ public class MaidAIChatManagerMixin extends MaidAIChatData implements IMaidAICha
         super(maid);
     }
 
-    /**
-     * 生成 AI 信件：调用 LLM 返回仅包含 {"title": "...", "message": "..."} 的 JSON，
-     * 回调中解析为包裹物品（随机 IPackageItem）+ 随机明信片样式。
-     */
     @Override
     public void tlm_contact$generateLetter(MaidLetterRule.AI ai, ServerPlayer owner, Consumer<ItemStack> onResult) {
         if (!AIConfig.LLM_ENABLED.get()) {
@@ -53,7 +47,7 @@ public class MaidAIChatManagerMixin extends MaidAIChatData implements IMaidAICha
             return;
         }
 
-        String system = PromptUtil.buildSystemPrompt(ai);
+        String system = PromptUtil.buildSystemPrompt(ai, this.maid, owner);
         LOGGER.debug("[MaidMail][AI] start generate letter maidId={} site={} model={}", this.maid.getId(), site.getName().getString(), this.getLLMModel());
 
         LLMClient client = site.client();
@@ -61,7 +55,7 @@ public class MaidAIChatManagerMixin extends MaidAIChatData implements IMaidAICha
         chat.add(LLMMessage.systemChat(this.maid, system));
         chat.add(LLMMessage.userChat(this.maid, ai.prompt()));
 
-        LLMConfig config = LLMConfig.normalChat(this.getLLMModel(), this.maid);
+        LLMConfig config = createEnhancedLLMConfig(this.getLLMModel(), this.maid);
 
         client.chat(chat, config, new LLMCallback((MaidAIChatManager) (Object) this, "", 0) {
             @Override
@@ -69,7 +63,7 @@ public class MaidAIChatManagerMixin extends MaidAIChatData implements IMaidAICha
                 String content = responseChat.chatText;
                 LOGGER.debug("[MaidMail][AI] onSuccess contentLen={} preview=\"{}\"", content.length(), content.substring(0, Math.min(content.length(), 120)));
                 String senderName = this.maid.getName().getString();
-                ItemStack result = LetterJsonParser.parseToLetter(content, senderName);
+                ItemStack result = LetterJsonParser.parseToLetter(content, senderName, this.maid);
                 LOGGER.debug("[MaidMail][AI] parse result empty? {}", result.isEmpty());
                 onResult.accept(result);
             }
@@ -86,5 +80,17 @@ public class MaidAIChatManagerMixin extends MaidAIChatData implements IMaidAICha
                 onFailure(null, new RuntimeException("Unexpected function call"), ErrorCode.JSON_DECODE_ERROR);
             }
         });
+    }
+
+    private LLMConfig createEnhancedLLMConfig(String model, EntityMaid maid) {
+        double temperatureBoost = AILetterConfig.CREATIVITY_TEMPERATURE_BOOST.get();
+        double enhancedTemperature = Math.min(1.2, AIConfig.LLM_TEMPERATURE.get() + temperatureBoost);
+
+        int enhancedMaxTokens = Math.max(AIConfig.LLM_MAX_TOKEN.get(), 200);
+        
+        LOGGER.debug("[MaidMail][AI] Enhanced LLM config - temperature: {} (boost: {}), maxTokens: {}", 
+                    enhancedTemperature, temperatureBoost, enhancedMaxTokens);
+        
+        return new LLMConfig(model, enhancedTemperature, enhancedMaxTokens, maid, ChatType.NORMAL_CHAT);
     }
 }

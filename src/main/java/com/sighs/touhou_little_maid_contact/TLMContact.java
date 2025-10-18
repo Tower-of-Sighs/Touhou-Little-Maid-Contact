@@ -3,6 +3,7 @@ package com.sighs.touhou_little_maid_contact;
 import com.mafuyu404.oelib.forge.data.DataRegistry;
 import com.mojang.logging.LogUtils;
 import com.sighs.touhou_little_maid_contact.command.MaidLetterCommand;
+import com.sighs.touhou_little_maid_contact.config.Config;
 import com.sighs.touhou_little_maid_contact.data.MaidLetterRegistry;
 import com.sighs.touhou_little_maid_contact.data.MaidLetterRule;
 import net.minecraftforge.common.MinecraftForge;

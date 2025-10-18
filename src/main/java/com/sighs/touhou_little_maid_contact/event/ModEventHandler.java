@@ -10,7 +10,7 @@ import net.minecraftforge.fml.common.Mod;
 public class ModEventHandler {
 
     @SubscribeEvent
-    private static void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
+    public static void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
         if (event.getEntity() instanceof ServerPlayer sp) {
             TriggerRegistry.clearAll(sp);
         }

@@ -1,4 +1,4 @@
-package com.sighs.touhou_little_maid_contact;
+package com.sighs.touhou_little_maid_contact.config;
 
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.ModLoadingContext;
@@ -19,6 +19,7 @@ public final class Config {
     }
 
     public static void register() {
-        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, SERVER_SPEC);
+        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, SERVER_SPEC);
+        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, AILetterConfig.SPEC);
     }
 }
