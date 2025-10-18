@@ -1,0 +1,18 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.sighs.touhou_little_maid_contact.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "refmap": "touhou_little_maid_contact.refmap.json",
+  "mixins": [
+    "MaidAIChatManagerMixin"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  }
+}

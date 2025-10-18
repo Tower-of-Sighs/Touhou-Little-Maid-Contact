@@ -1,0 +1,21 @@
+{
+  "type": "preset",
+  "id": "first_gift",
+  "triggers": [
+    "touhou_little_maid_contact:first_gift_trigger"
+  ],
+  "trigger_type": "once",
+  "min_affection": 0,
+  "max_affection": 500,
+  "cooldown": 100,
+  "preset": {
+    "title": "琥珀之夜",
+    "message": "主人，今夜的风里有旧日的香气。\n我为您温了一壶神酒，请千万不要一口饮尽——那酒能让人梦见遗忘的微笑。\n若您在梦中看见我，请不要惊讶，那不过是狐狸的习惯，想看看自己心中的人。",
+    "gifts": [
+      {
+        "parcel": "contact:letter",
+        "postcard": "contact:moonlit_night"
+      }
+    ]
+  }
+}
