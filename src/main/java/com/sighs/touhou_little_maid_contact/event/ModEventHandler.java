@@ -1,6 +1,6 @@
 package com.sighs.touhou_little_maid_contact.event;
 
-import com.sighs.touhou_little_maid_contact.triggers.TriggerRegistry;
+import com.sighs.touhou_little_maid_contact.trigger.TriggerManager;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -12,7 +12,7 @@ public class ModEventHandler {
     @SubscribeEvent
     public static void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
         if (event.getEntity() instanceof ServerPlayer sp) {
-            TriggerRegistry.clearAll(sp);
+            TriggerManager.getInstance().clearAllTriggered(sp);
         }
     }
 }

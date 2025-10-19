@@ -2,7 +2,7 @@ package com.sighs.touhou_little_maid_contact.command;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
-import com.sighs.touhou_little_maid_contact.triggers.TriggerRegistry;
+import com.sighs.touhou_little_maid_contact.trigger.TriggerManager;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
@@ -33,7 +33,7 @@ public class MaidLetterCommand {
     private static int executeFirstGift(CommandContext<CommandSourceStack> context) {
         CommandSourceStack source = context.getSource();
         if (source.getEntity() instanceof ServerPlayer player) {
-            TriggerRegistry.mark(player, new ResourceLocation("touhou_little_maid_contact", "first_gift_trigger"));
+            TriggerManager.getInstance().markTriggered(player, new ResourceLocation("touhou_little_maid_contact", "first_gift_trigger"));
             source.sendSuccess(() -> Component.literal("已触发第一份礼物事件！女仆将会给你写信~"), false);
             return 1;
         } else {

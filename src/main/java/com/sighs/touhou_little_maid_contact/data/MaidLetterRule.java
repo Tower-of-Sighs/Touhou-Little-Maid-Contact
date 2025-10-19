@@ -33,7 +33,7 @@ public record MaidLetterRule(
 
     public enum TriggerType {
         ONCE,       // 一次性触发，使用后会被消费
-        PERSISTENT  // 持久性触发，一直有效（如成就）
+        PERSISTENT  // 持久性触发，一直有效
     }
 
     public static final Codec<MaidLetterRule> CODEC = RecordCodecBuilder.create(instance ->

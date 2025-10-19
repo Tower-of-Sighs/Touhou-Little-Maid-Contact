@@ -1,9 +1,9 @@
-package com.sighs.touhou_little_maid_contact.util;
+package com.sighs.touhou_little_maid_contact.ai.prompt;
 
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.mojang.logging.LogUtils;
 import com.sighs.touhou_little_maid_contact.config.AILetterConfig;
-import com.sighs.touhou_little_maid_contact.data.MaidLetterRule;
+import com.sighs.touhou_little_maid_contact.util.PostcardPackageUtil;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -16,22 +16,22 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-public final class PromptUtil {
+public class EnhancedPromptBuilder implements IPromptBuilder {
     private static final Logger LOGGER = LogUtils.getLogger();
-    
-    // 记忆系统：存储最近生成的内容以避免重复
+
+    // 记忆系统
     private static final Map<String, Queue<String>> RECENT_CONTENT_MEMORY = new ConcurrentHashMap<>();
 
-    // 多样化的写作风格模板
-    private static final List<String> WRITING_STYLES = List.of(
-            "用诗意的语言和感性的描写",
-            "用轻松活泼的语气",
-            "用温柔细腻的笔触",
-            "用略带调皮的语调",
-            "用古典优雅的文风",
-            "用现代简洁的表达",
-            "用充满想象力的比喻",
-            "用温暖治愈的语调"
+    // 表达技巧模板
+    private static final List<String> EXPRESSION_TECHNIQUES = List.of(
+            "运用生动的细节描写",
+            "加入感官体验的描述",
+            "使用比喻和拟人手法",
+            "营造特定的氛围感",
+            "运用对比和层次感",
+            "加入动作和场景描写",
+            "使用富有画面感的词汇",
+            "创造独特的表达角度"
     );
 
     // 情境描述模板
@@ -61,25 +61,20 @@ public final class PromptUtil {
             "温柔", "欣喜", "宁静", "期待", "思念", "满足", "好奇", "关怀"
     );
 
-    private PromptUtil() {
-    }
-
-    public static String buildSystemPrompt(MaidLetterRule.AI ai, EntityMaid maid, ServerPlayer owner) {
-        String tone = ai.tone().orElse("sweet");
+    @Override
+    public String buildSystemPrompt(String tone, EntityMaid maid, ServerPlayer owner) {
         var allPostcards = PostcardPackageUtil.getAllPostcardIds();
         var allParcels = PostcardPackageUtil.getAllPackageItemIds();
         String postcardsList = allPostcards.stream().map(ResourceLocation::toString).collect(Collectors.joining(", "));
         String parcelsList = allParcels.stream().map(ResourceLocation::toString).collect(Collectors.joining(", "));
 
         // 生成动态上下文信息
-        String contextInfo = AILetterConfig.ENABLE_CONTEXT_ENRICHMENT.get() ? 
-                            generateContextInfo(maid, owner) : "当前环境：普通";
-        String writingStyle = getRandomWritingStyle();
+        String contextInfo = AILetterConfig.ENABLE_CONTEXT_ENRICHMENT.get() ?
+                generateContextInfo(maid, owner) : "当前环境：普通";
+        String expressionTechnique = getRandomExpressionTechnique();
         String creativityBoost = generateCreativityBoost();
         String memoryConstraints = generateMemoryConstraints(maid.getStringUUID());
 
-        LOGGER.debug("[MaidMail] buildSystemPrompt tone={} postcards={} parcels={} context={}", 
-                    tone, allPostcards.size(), allParcels.size(), contextInfo);
 
         return """
                 你是一个女仆，需要给主人写一封信。
@@ -87,7 +82,7 @@ public final class PromptUtil {
                 【当前情境】
                 %s
                 
-                【写作要求】
+                【表达技巧】
                 - %s
                 - 避免使用过于常见的表达方式，要有创新性
                 - 每次都要尝试不同的开头和结尾方式
@@ -110,13 +105,28 @@ public final class PromptUtil {
                 
                 示例格式（内容要完全不同）：
                 {"title":"独特标题","message":"富有创意的信件内容","postcard_id":"contact:default","parcel_id":"contact:letter"}
-                """.formatted(contextInfo, writingStyle, creativityBoost, memoryConstraints, postcardsList, parcelsList, tone);
+                """.formatted(contextInfo, expressionTechnique, creativityBoost, memoryConstraints, postcardsList, parcelsList, tone);
     }
 
-    /**
-     * 生成动态上下文信息
-     */
-    private static String generateContextInfo(EntityMaid maid, ServerPlayer owner) {
+    @Override
+    public void recordGeneratedContent(String maidId, String title, String message) {
+        String contentSummary = title + ": " + (message.length() > 30 ? message.substring(0, 30) + "..." : message);
+
+        Queue<String> recentContent = RECENT_CONTENT_MEMORY.computeIfAbsent(maidId, k -> new LinkedList<>());
+
+        recentContent.offer(contentSummary);
+        int maxMemorySize = AILetterConfig.MEMORY_SIZE.get();
+        if (recentContent.size() > maxMemorySize) {
+            recentContent.poll(); // 移除最旧的记录
+        }
+    }
+
+    @Override
+    public void clearMemory(String maidId) {
+        RECENT_CONTENT_MEMORY.remove(maidId);
+    }
+
+    private String generateContextInfo(EntityMaid maid, ServerPlayer owner) {
         Random random = new Random();
         StringBuilder context = new StringBuilder();
 
@@ -150,18 +160,12 @@ public final class PromptUtil {
         return context.toString();
     }
 
-    /**
-     * 获取随机写作风格
-     */
-    private static String getRandomWritingStyle() {
+    private String getRandomExpressionTechnique() {
         Random random = new Random();
-        return WRITING_STYLES.get(random.nextInt(WRITING_STYLES.size()));
+        return EXPRESSION_TECHNIQUES.get(random.nextInt(EXPRESSION_TECHNIQUES.size()));
     }
 
-    /**
-     * 生成创意提升提示
-     */
-    private static String generateCreativityBoost() {
+    private String generateCreativityBoost() {
         Random random = new Random();
         List<String> creativityTips = List.of(
                 "尝试使用比喻或拟人的手法",
@@ -173,14 +177,11 @@ public final class PromptUtil {
                 "试着用对话或内心独白的形式",
                 "可以使用一些文学性的修辞手法"
         );
-        
+
         return creativityTips.get(random.nextInt(creativityTips.size()));
     }
 
-    /**
-     * 生成记忆约束，避免重复之前的内容
-     */
-    private static String generateMemoryConstraints(String maidId) {
+    private String generateMemoryConstraints(String maidId) {
         Queue<String> recentContent = RECENT_CONTENT_MEMORY.get(maidId);
         if (recentContent == null || recentContent.isEmpty()) {
             return "这是第一次生成信件，可以自由发挥创意。";
@@ -194,32 +195,7 @@ public final class PromptUtil {
             count++;
         }
         constraints.append("请使用完全不同的表达方式和创意角度。");
-        
+
         return constraints.toString();
-    }
-
-    /**
-     * 记录生成的内容到记忆系统
-     */
-    public static void recordGeneratedContent(String maidId, String title, String message) {
-        String contentSummary = title + ": " + (message.length() > 30 ? message.substring(0, 30) + "..." : message);
-        
-        Queue<String> recentContent = RECENT_CONTENT_MEMORY.computeIfAbsent(maidId, k -> new LinkedList<>());
-        
-        recentContent.offer(contentSummary);
-        int maxMemorySize = AILetterConfig.MEMORY_SIZE.get();
-        if (recentContent.size() > maxMemorySize) {
-            recentContent.poll(); // 移除最旧的记录
-        }
-        
-        LOGGER.debug("[MaidMail][Memory] Recorded content for maid {}: {}", maidId, contentSummary);
-    }
-
-    /**
-     * 清理指定女仆的记忆（可用于重置或清理）
-     */
-    public static void clearMemory(String maidId) {
-        RECENT_CONTENT_MEMORY.remove(maidId);
-        LOGGER.debug("[MaidMail][Memory] Cleared memory for maid {}", maidId);
     }
 }
