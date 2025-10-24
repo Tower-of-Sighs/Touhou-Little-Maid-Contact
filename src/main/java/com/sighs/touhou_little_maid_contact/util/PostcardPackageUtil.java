@@ -112,10 +112,9 @@ public final class PostcardPackageUtil {
         }
 
         List<ResourceLocation> packageIds = getAllPackageItemIds();
-        ResourceLocation chosen = packageIds.isEmpty()
+        return packageIds.isEmpty()
                 ? new ResourceLocation("contact", "letter")
                 : packageIds.get(ThreadLocalRandom.current().nextInt(packageIds.size()));
-        return chosen;
     }
 
     public static ResourceLocation choosePostcardId(String postcardIdStr) {

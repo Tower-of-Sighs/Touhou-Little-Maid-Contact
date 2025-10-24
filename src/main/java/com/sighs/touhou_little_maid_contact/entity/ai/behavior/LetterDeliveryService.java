@@ -9,6 +9,7 @@ import com.flechazo.contact.forge.storage.MailboxDataCapability;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.github.tartaricacid.touhoulittlemaid.util.ItemsUtil;
 import com.mojang.logging.LogUtils;
+import com.sighs.touhou_little_maid_contact.config.Config;
 import com.sighs.touhou_little_maid_contact.util.MailboxSafetyEvaluator;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
@@ -44,17 +45,14 @@ public final class LetterDeliveryService {
         boolean ownerInHome = homeMode && maid.closerThan(owner, homeRadius);
 
         if (!homeMode) {
-            // 跟随：只给玩家
             handToOwnerIfNear(maid, owner, parcel);
             return;
         }
 
-        // Home 模式：优先邮筒
         if (tryDeliverViaMailbox(maid, level, owner, parcel, homeCenter, homeRadius)) {
             return;
         }
 
-        // 邮筒不可用或不在范围，若主人在家范围则交付给主人
         if (ownerInHome) {
             handToOwnerIfNear(maid, owner, parcel);
         }
@@ -63,7 +61,7 @@ public final class LetterDeliveryService {
     private static boolean tryDeliverViaMailbox(EntityMaid maid, ServerLevel level, ServerPlayer owner,
                                                 ItemStack parcel, BlockPos homeCenter, int homeRadius) {
 
-        var mailboxOpt = MailboxSafetyEvaluator.getBestUsableMailbox(level, homeCenter, Math.min(16, homeRadius));
+        var mailboxOpt = MailboxSafetyEvaluator.getBestUsableMailbox(level, homeCenter, Math.min(Config.MAILBOX_SEARCH_RADIUS.get(), homeRadius));
 
         if (mailboxOpt.isPresent()) {
             BlockPos pos = mailboxOpt.get().pos();

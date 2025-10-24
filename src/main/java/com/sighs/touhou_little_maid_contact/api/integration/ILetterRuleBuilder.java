@@ -36,7 +36,7 @@ public interface ILetterRuleBuilder {
      * @param triggerId 触发器ID
      */
     ILetterRuleBuilder trigger(ResourceLocation triggerId);
-    
+
 
     /**
      * 添加多个触发器
@@ -78,7 +78,6 @@ public interface ILetterRuleBuilder {
      *
      * @param tone   语调
      * @param prompt 提示词
-
      */
     ILetterRuleBuilder aiGenerator(String tone, String prompt);
 
@@ -89,19 +88,16 @@ public interface ILetterRuleBuilder {
      * @param message    内容
      * @param postcardId 明信片ID
      * @param parcelId   包裹ID
-
      */
     ILetterRuleBuilder presetGenerator(String title, String message, String postcardId, String parcelId);
 
     /**
      * 设置为一次性触发器
-     *
      */
     ILetterRuleBuilder once();
 
     /**
      * 设置为重复触发器
-     *
      */
     ILetterRuleBuilder repeat();
 

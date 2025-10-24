@@ -1,8 +1,10 @@
 package com.sighs.touhou_little_maid_contact.util;
 
+import com.sighs.touhou_little_maid_contact.config.Config;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.level.pathfinder.BlockPathTypes;
 import net.minecraft.world.level.pathfinder.Path;
 
 import java.util.ArrayList;
@@ -13,80 +15,140 @@ public final class PathSafetyPlanner {
     private PathSafetyPlanner() {
     }
 
+    /**
+     * 规划安全的避险路径
+     */
     public static Path planSimpleAvoidancePath(Mob entity, BlockPos target) {
         var nav = entity.getNavigation();
         ServerLevel level = (ServerLevel) entity.level();
         BlockPos start = entity.blockPosition();
 
+        // 首先尝试直接路径
         Path direct = nav.createPath(target, 1);
-        if (isPathSafeEnough(level, direct)) {
+        if (isPathSafeEnough(level, direct, entity)) {
             return direct;
         }
 
-        List<BlockPos> smartCandidates = generateSmartDetourCandidates(level, start, target);
+        // 生成智能绕路候选点
+        List<BlockPos> smartCandidates = generateSmartDetourCandidates(level, start, target, entity);
         for (BlockPos candidate : smartCandidates) {
             Path path = nav.createPath(candidate, 1);
-            if (isPathSafeEnough(level, path)) {
+            if (isPathSafeEnough(level, path, entity)) {
                 return path;
             }
         }
 
-        List<BlockPos> nearCandidates = generateNearCandidates(level, target, 2);
+        // 尝试附近的安全点
+        List<BlockPos> nearCandidates = generateSafeCandidatesNear(level, target, 3, entity);
         for (BlockPos candidate : nearCandidates) {
             Path path = nav.createPath(candidate, 1);
-            if (isPathSafeEnough(level, path)) {
+            if (isPathSafeEnough(level, path, entity)) {
                 return path;
             }
         }
 
+        // fallback 扩大搜索范围
         Path fallback = nav.createPath(target, 3);
-        if (isPathSafeEnough(level, fallback)) {
+        if (isPathSafeEnough(level, fallback, entity)) {
             return fallback;
         }
 
+        // 如果都不行，返回直接路径让上层处理
         return direct;
     }
 
-    private static List<BlockPos> generateSmartDetourCandidates(ServerLevel level, BlockPos start, BlockPos target) {
+    /**
+     * 生成智能绕路候选点
+     */
+    private static List<BlockPos> generateSmartDetourCandidates(ServerLevel level, BlockPos start, BlockPos target, Mob entity) {
         List<BlockPos> candidates = new ArrayList<>();
-
         PathData pathData = calculatePathData(start, target);
 
         if (pathData.distance <= 2) {
-            return candidates;
+            return candidates; // 距离太近，不需要绕路
         }
 
         List<BlockPos> hazardPoints = findHazardsOnPath(level, start, target, pathData);
-
         if (hazardPoints.isEmpty()) {
             return candidates;
         }
 
-        // 为每个危险点生成绕路候选
         for (BlockPos hazard : hazardPoints) {
-            // 生成垂直于主方向的绕路点
-            if (Math.abs(pathData.dx) > Math.abs(pathData.dz)) {
-                // 主要是水平移动，尝试垂直绕路
-                candidates.add(hazard.offset(0, 0, 3));
-                candidates.add(hazard.offset(0, 0, -3));
-                candidates.add(hazard.offset(0, 0, 5));
-                candidates.add(hazard.offset(0, 0, -5));
-            } else {
-                // 主要是垂直移动，尝试水平绕路
-                candidates.add(hazard.offset(3, 0, 0));
-                candidates.add(hazard.offset(-3, 0, 0));
-                candidates.add(hazard.offset(5, 0, 0));
-                candidates.add(hazard.offset(-5, 0, 0));
-            }
+            generateDetourAroundHazard(level, hazard, pathData, candidates, entity);
         }
 
-        // 过滤掉不安全的候选点
-        candidates.removeIf(pos -> !HazardUtil.isSafeStanding(level, pos));
-
-        // 按距离目标的远近排序
+        candidates.removeIf(pos -> !HazardUtil.isSafeForStanding(level, pos, entity));
         candidates.sort(Comparator.comparingDouble(a -> a.distSqr(target)));
 
         return candidates;
+    }
+
+    /**
+     * 为危险点生成绕路候选
+     */
+    private static void generateDetourAroundHazard(ServerLevel level, BlockPos hazard, PathData pathData,
+                                                   List<BlockPos> candidates, Mob entity) {
+        if (Math.abs(pathData.dx) > Math.abs(pathData.dz)) {
+            addDetourCandidates(candidates, hazard, 0, 0, new int[]{2, 3, 4, -2, -3, -4});
+        } else {
+            addDetourCandidates(candidates, hazard, new int[]{2, 3, 4, -2, -3, -4}, 0, 0);
+        }
+
+        candidates.add(hazard.above());
+        candidates.add(hazard.above(2));
+        candidates.add(hazard.below());
+    }
+
+    private static void addDetourCandidates(List<BlockPos> candidates, BlockPos base, int dx, int dy, int[] offsets) {
+        for (int offset : offsets) {
+            candidates.add(base.offset(dx, dy, offset));
+        }
+    }
+
+    private static void addDetourCandidates(List<BlockPos> candidates, BlockPos base, int[] offsets, int dy, int dz) {
+        for (int offset : offsets) {
+            candidates.add(base.offset(offset, dy, dz));
+        }
+    }
+
+    /**
+     * 在目标附近生成安全候选点（按优先级：水平方向>对角线>远距离>垂直方向）
+     */
+    private static List<BlockPos> generateSafeCandidatesNear(ServerLevel level, BlockPos target, int radius, Mob entity) {
+        List<BlockPos> candidates = new ArrayList<>();
+
+        addIfSafe(candidates, level, target.north(), entity);
+        addIfSafe(candidates, level, target.south(), entity);
+        addIfSafe(candidates, level, target.east(), entity);
+        addIfSafe(candidates, level, target.west(), entity);
+
+        if (radius > 1) {
+            addIfSafe(candidates, level, target.north().east(), entity);
+            addIfSafe(candidates, level, target.north().west(), entity);
+            addIfSafe(candidates, level, target.south().east(), entity);
+            addIfSafe(candidates, level, target.south().west(), entity);
+
+            for (int dist = 2; dist <= radius; dist++) {
+                addIfSafe(candidates, level, target.north(dist), entity);
+                addIfSafe(candidates, level, target.south(dist), entity);
+                addIfSafe(candidates, level, target.east(dist), entity);
+                addIfSafe(candidates, level, target.west(dist), entity);
+            }
+
+            if (candidates.size() < 2) {
+                addIfSafe(candidates, level, target.above(), entity);
+                addIfSafe(candidates, level, target.below(), entity);
+            }
+        }
+
+        candidates.sort(Comparator.comparingDouble(a -> a.distSqr(target)));
+        return candidates;
+    }
+
+    private static void addIfSafe(List<BlockPos> candidates, ServerLevel level, BlockPos pos, Mob entity) {
+        if (HazardUtil.isSafeForStanding(level, pos, entity)) {
+            candidates.add(pos);
+        }
     }
 
     private static List<BlockPos> findHazardsOnPath(ServerLevel level, BlockPos start, BlockPos target, PathData pathData) {
@@ -99,14 +161,14 @@ public final class PathSafetyPlanner {
             int z = start.getZ() + (pathData.dz * i) / pathData.distance;
             BlockPos checkPos = new BlockPos(x, start.getY(), z);
 
-            if (HazardUtil.isPosHazardous(level, checkPos)) {
+            BlockPathTypes pathType = HazardUtil.getBlockPathType(level, checkPos);
+            if (HazardUtil.isPathTypeDangerous(pathType)) {
                 hazards.add(checkPos);
             }
         }
 
         return hazards;
     }
-
 
     private static PathData calculatePathData(BlockPos start, BlockPos target) {
         int dx = target.getX() - start.getX();
@@ -118,23 +180,34 @@ public final class PathSafetyPlanner {
     private record PathData(int dx, int dz, int distance) {
     }
 
+    /**
+     * 检查位置是否可达
+     */
     public static boolean isPositionAccessible(ServerLevel level, BlockPos from, BlockPos to) {
         double distance = from.distSqr(to);
-        if (distance > 1024) return false;
+        if (distance > 1024) return false; // 距离太远
 
-        if (HazardUtil.isSafeStanding(level, to)) return true;
+        // 检查目标位置本身
+        if (HazardUtil.isSafeStanding(level, to)) {
+            return true;
+        }
 
+        // 检查周围位置
         BlockPos[] around = {to.north(), to.south(), to.east(), to.west(), to.above(), to.below()};
-        for (BlockPos p : around) {
-            if (HazardUtil.isSafeStanding(level, p)) {
+        for (BlockPos pos : around) {
+            if (HazardUtil.isSafeStanding(level, pos)) {
                 return true;
             }
         }
         return false;
     }
 
-    private static boolean isPathSafeEnough(ServerLevel level, Path path) {
+    /**
+     * 检查路径是否足够安全
+     */
+    private static boolean isPathSafeEnough(ServerLevel level, Path path, Mob entity) {
         if (path == null || path.getNodeCount() == 0) return false;
+
         int nodes = path.getNodeCount();
         int startIdx = Math.max(0, path.getNextNodeIndex());
 
@@ -142,23 +215,33 @@ public final class PathSafetyPlanner {
         int maxConsecutiveSafe = 0;
         int totalSafe = 0;
         int totalChecked = 0;
-        int consecutiveHazard = 0;
-        int maxConsecutiveHazard = 0;
+        int consecutiveDangerous = 0;
+        int maxConsecutiveDangerous = 0;
 
         for (int i = startIdx; i < nodes; i++) {
-            var n = path.getNode(i);
-            BlockPos pos = new BlockPos(n.x, n.y, n.z);
+            var node = path.getNode(i);
+            BlockPos pos = new BlockPos(node.x, node.y, node.z);
             totalChecked++;
 
-            if (!HazardUtil.isPosHazardous(level, pos)) {
+            BlockPathTypes pathType = HazardUtil.getBlockPathType(level, pos);
+            boolean isDangerous = HazardUtil.isPathTypeDangerous(pathType);
+
+            if (entity != null) {
+                float malus = entity.getPathfindingMalus(pathType);
+                if (malus < 0.0F) {
+                    isDangerous = true;
+                }
+            }
+
+            if (!isDangerous) {
                 totalSafe++;
                 consecutiveSafe++;
                 maxConsecutiveSafe = Math.max(maxConsecutiveSafe, consecutiveSafe);
-                consecutiveHazard = 0;
+                consecutiveDangerous = 0;
             } else {
                 consecutiveSafe = 0;
-                consecutiveHazard++;
-                maxConsecutiveHazard = Math.max(maxConsecutiveHazard, consecutiveHazard);
+                consecutiveDangerous++;
+                maxConsecutiveDangerous = Math.max(maxConsecutiveDangerous, consecutiveDangerous);
             }
         }
 
@@ -166,77 +249,19 @@ public final class PathSafetyPlanner {
 
         int safetyPercentage = (totalSafe * 100) / totalChecked;
 
-        // 1. 不允许连续3个以上的危险节点
-        if (maxConsecutiveHazard >= 3) {
+        if (maxConsecutiveDangerous > Config.MAX_CONSECUTIVE_DANGEROUS.get()) {
             return false;
         }
 
-        // 2. 短路径（<=3节点）必须100%安全
         if (totalChecked <= 3) {
-            return safetyPercentage == 100;
+            return safetyPercentage >= 90;
         }
 
-        // 3. 中等路径（4-8节点）需要至少80%安全
         if (totalChecked <= 8) {
-            return safetyPercentage >= 80;
+            return safetyPercentage >= 75;
         }
 
-        // 4. 长路径需要至少70%安全，且必须有足够长的连续安全段
-        boolean hasGoodSafeSegment = maxConsecutiveSafe >= Math.max(3, totalChecked / 4);
-        return safetyPercentage >= 70 && hasGoodSafeSegment;
-    }
-
-    private static List<BlockPos> generateNearCandidates(ServerLevel level, BlockPos target, int radius) {
-        List<BlockPos> candidates = new ArrayList<>();
-
-        // 按优先级生成候选点
-        // 1. 首先尝试基本的4个水平方向
-        BlockPos[] basicDirs = {target.north(), target.south(), target.east(), target.west()};
-        for (BlockPos pos : basicDirs) {
-            if (HazardUtil.isSafeStanding(level, pos)) {
-                candidates.add(pos);
-            }
-        }
-
-        if (radius > 1) {
-            // 2. 然后尝试对角线方向
-            BlockPos[] diagonals = {
-                    target.north().east(), target.north().west(),
-                    target.south().east(), target.south().west()
-            };
-            for (BlockPos pos : diagonals) {
-                if (HazardUtil.isSafeStanding(level, pos)) {
-                    candidates.add(pos);
-                }
-            }
-
-            // 3. 尝试更远的水平方向
-            for (int dist = 2; dist <= radius; dist++) {
-                BlockPos[] farDirs = {
-                        target.north(dist), target.south(dist),
-                        target.east(dist), target.west(dist)
-                };
-                for (BlockPos pos : farDirs) {
-                    if (HazardUtil.isSafeStanding(level, pos)) {
-                        candidates.add(pos);
-                    }
-                }
-            }
-
-            // 4. 最后考虑垂直方向（只在必要时）
-            if (candidates.isEmpty()) {
-                BlockPos[] verticals = {target.above(), target.below()};
-                for (BlockPos pos : verticals) {
-                    if (HazardUtil.isSafeStanding(level, pos)) {
-                        candidates.add(pos);
-                    }
-                }
-            }
-        }
-
-        // 按距离目标的远近排序，优先选择更近的候选点
-        candidates.sort(Comparator.comparingDouble(a -> a.distSqr(target)));
-
-        return candidates;
+        boolean hasGoodSafeSegment = maxConsecutiveSafe >= Math.max(3, totalChecked / 5);
+        return safetyPercentage >= Config.PATH_SAFETY_PERCENTAGE.get() && hasGoodSafeSegment;
     }
 }

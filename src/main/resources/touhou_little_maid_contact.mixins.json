@@ -5,7 +5,6 @@
   "compatibilityLevel": "JAVA_8",
   "refmap": "touhou_little_maid_contact.refmap.json",
   "mixins": [
-    "MaidAIChatManagerMixin"
   ],
   "client": [
   ],
