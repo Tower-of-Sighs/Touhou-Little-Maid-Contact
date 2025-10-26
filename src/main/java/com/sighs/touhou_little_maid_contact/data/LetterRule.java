@@ -95,7 +95,7 @@ public class LetterRule implements ILetterRule {
 
         for (ResourceLocation triggerId : triggers) {
             // 检查成就触发器
-            Advancement advancement = server.getAdvancements().getAdvancement(triggerId);
+            var advancement = server.getAdvancements().get(triggerId);
             if (advancement != null) {
                 boolean done = owner.getAdvancements().getOrStartProgress(advancement).isDone();
                 if (done) return true;

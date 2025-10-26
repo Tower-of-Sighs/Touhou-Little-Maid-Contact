@@ -4,14 +4,25 @@ import com.sighs.touhou_little_maid_contact.config.Config;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.level.pathfinder.BlockPathTypes;
 import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.world.level.pathfinder.PathType;
+import com.mojang.logging.LogUtils;
+import net.neoforged.fml.loading.FMLLoader;
+import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
 public final class PathSafetyPlanner {
+    private static final Logger LOGGER = LogUtils.getLogger();
+
+    private static void logDebug(String format, Object... params) {
+        if (!FMLLoader.isProduction()) {
+            LOGGER.debug(format, params);
+        }
+    }
+
     private PathSafetyPlanner() {
     }
 
@@ -161,7 +172,7 @@ public final class PathSafetyPlanner {
             int z = start.getZ() + (pathData.dz * i) / pathData.distance;
             BlockPos checkPos = new BlockPos(x, start.getY(), z);
 
-            BlockPathTypes pathType = HazardUtil.getBlockPathType(level, checkPos);
+            PathType pathType = HazardUtil.getBlockPathType(level, checkPos);
             if (HazardUtil.isPathTypeDangerous(pathType)) {
                 hazards.add(checkPos);
             }
@@ -170,41 +181,6 @@ public final class PathSafetyPlanner {
         return hazards;
     }
 
-    private static PathData calculatePathData(BlockPos start, BlockPos target) {
-        int dx = target.getX() - start.getX();
-        int dz = target.getZ() - start.getZ();
-        int distance = Math.max(Math.abs(dx), Math.abs(dz));
-        return new PathData(dx, dz, distance);
-    }
-
-    private record PathData(int dx, int dz, int distance) {
-    }
-
-    /**
-     * 检查位置是否可达
-     */
-    public static boolean isPositionAccessible(ServerLevel level, BlockPos from, BlockPos to) {
-        double distance = from.distSqr(to);
-        if (distance > 1024) return false; // 距离太远
-
-        // 检查目标位置本身
-        if (HazardUtil.isSafeStanding(level, to)) {
-            return true;
-        }
-
-        // 检查周围位置
-        BlockPos[] around = {to.north(), to.south(), to.east(), to.west(), to.above(), to.below()};
-        for (BlockPos pos : around) {
-            if (HazardUtil.isSafeStanding(level, pos)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * 检查路径是否足够安全
-     */
     private static boolean isPathSafeEnough(ServerLevel level, Path path, Mob entity) {
         if (path == null || path.getNodeCount() == 0) return false;
 
@@ -223,7 +199,7 @@ public final class PathSafetyPlanner {
             BlockPos pos = new BlockPos(node.x, node.y, node.z);
             totalChecked++;
 
-            BlockPathTypes pathType = HazardUtil.getBlockPathType(level, pos);
+            PathType pathType = HazardUtil.getBlockPathType(level, pos);
             boolean isDangerous = HazardUtil.isPathTypeDangerous(pathType);
 
             if (entity != null) {
@@ -263,5 +239,47 @@ public final class PathSafetyPlanner {
 
         boolean hasGoodSafeSegment = maxConsecutiveSafe >= Math.max(3, totalChecked / 5);
         return safetyPercentage >= Config.PATH_SAFETY_PERCENTAGE.get() && hasGoodSafeSegment;
+    }
+
+    private static PathData calculatePathData(BlockPos start, BlockPos target) {
+        int dx = target.getX() - start.getX();
+        int dz = target.getZ() - start.getZ();
+        int distance = Math.max(Math.abs(dx), Math.abs(dz));
+        return new PathData(dx, dz, distance);
+    }
+
+    private record PathData(int dx, int dz, int distance) {
+    }
+
+    /**
+     * 检查位置是否可达
+     */
+    public static boolean isPositionAccessible(ServerLevel level, BlockPos from, BlockPos to) {
+        
+        double distance = from.distSqr(to);
+        if (distance > 1024) {
+            logDebug("[MaidMail][PathSafety] Distance too far, not accessible");
+            return false;
+        }
+
+        boolean targetSafe = HazardUtil.isSafeStanding(level, to);
+        if (targetSafe) {
+            return true;
+        }
+
+        BlockPos[] around = {to.north(), to.south(), to.east(), to.west(), to.above(), to.below()};
+        String[] directions = {"north", "south", "east", "west", "above", "below"};
+        for (int i = 0; i < around.length; i++) {
+            BlockPos pos = around[i];
+            boolean safe = HazardUtil.isSafeStanding(level, pos);
+            logDebug("[MaidMail][PathSafety] Around {} pos={} safe={}", directions[i], pos, safe);
+            if (safe) {
+                logDebug("[MaidMail][PathSafety] Found safe position around target, accessible");
+                return true;
+            }
+        }
+        
+        logDebug("[MaidMail][PathSafety] No safe positions found, not accessible");
+        return false;
     }
 }

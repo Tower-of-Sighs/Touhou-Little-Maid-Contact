@@ -5,12 +5,19 @@ import com.mojang.logging.LogUtils;
 import com.sighs.touhou_little_maid_contact.util.HazardUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.pathfinder.BlockPathTypes;
+import net.minecraft.world.level.pathfinder.PathType;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.fml.loading.FMLLoader;
 import org.slf4j.Logger;
 
 public final class AdvancedMovement {
     private static final Logger LOGGER = LogUtils.getLogger();
+
+    private static void logDebug(String format, Object... params) {
+        if (!FMLLoader.isProduction()) {
+            LOGGER.debug(format, params);
+        }
+    }
 
     private AdvancedMovement() {
     }
@@ -20,6 +27,9 @@ public final class AdvancedMovement {
      */
     public static boolean forceMoveTo(EntityMaid maid, BlockPos target, double speed) {
         try {
+            logDebug("[MaidMail][AdvancedMovement] Force move start maidId={} target={} speed={}", 
+                    maid.getId(), target, speed);
+            
             var nav = maid.getNavigation();
             nav.stop();
 
@@ -30,6 +40,8 @@ public final class AdvancedMovement {
 
             if (distance < 0.5) {
                 if (isSafeToTeleport(maid, targetPos)) {
+                    logDebug("[MaidMail][AdvancedMovement] Teleporting maidId={} to target={}", 
+                            maid.getId(), target);
                     maid.setPos(targetPos.x, targetPos.y, targetPos.z);
                     return true;
                 }
@@ -41,11 +53,15 @@ public final class AdvancedMovement {
                     (int) Math.signum(direction.x), 0, (int) Math.signum(direction.z));
 
             ServerLevel level = (ServerLevel) maid.level();
-            BlockPathTypes pathType = HazardUtil.getBlockPathType(level, nextPos);
+            PathType pathType = HazardUtil.getBlockPathType(level, nextPos);
 
             if (HazardUtil.isPathTypeDangerous(pathType) || !HazardUtil.isSafeForStanding(level, nextPos, maid)) {
+                logDebug("[MaidMail][AdvancedMovement] Unsafe path detected maidId={} nextPos={} pathType={}", 
+                        maid.getId(), nextPos, pathType);
                 return handleUnsafePath(maid, direction, target, speed);
             } else {
+                logDebug("[MaidMail][AdvancedMovement] Normal movement maidId={} pathType={}", 
+                        maid.getId(), pathType);
                 return handleNormalMovement(maid, direction, speed);
             }
 
@@ -76,7 +92,7 @@ public final class AdvancedMovement {
         }
 
         if (direction.y > 0.1) {
-            maid.setDeltaMovement(0, Math.min(0.3, maid.getStepHeight() + 0.1), 0);
+            maid.setDeltaMovement(0, Math.min(0.3, maid.maxUpStep() + 0.1), 0);
             return true;
         } else if (direction.y < -0.1) {
             BlockPos below = maid.blockPosition().below();
@@ -85,7 +101,7 @@ public final class AdvancedMovement {
                 return true;
             }
         } else {
-            double jumpHeight = Math.min(0.4, maid.getStepHeight() + 0.2);
+            double jumpHeight = Math.min(0.4, maid.maxUpStep() + 0.2);
             maid.setDeltaMovement(direction.x * 0.1, jumpHeight, direction.z * 0.1);
             return true;
         }
@@ -98,7 +114,7 @@ public final class AdvancedMovement {
 
         ServerLevel level = (ServerLevel) maid.level();
         BlockPos currentPos = maid.blockPosition();
-        BlockPathTypes currentPathType = HazardUtil.getBlockPathType(level, currentPos);
+        PathType currentPathType = HazardUtil.getBlockPathType(level, currentPos);
 
         double speedMultiplier = getSpeedMultiplierForPathType(currentPathType);
         moveSpeed *= speedMultiplier;
@@ -112,7 +128,7 @@ public final class AdvancedMovement {
         return true;
     }
 
-    private static double getSpeedMultiplierForPathType(BlockPathTypes pathType) {
+    private static double getSpeedMultiplierForPathType(PathType pathType) {
         return switch (pathType) {
             case WATER -> 0.6;
             case STICKY_HONEY -> 0.3;

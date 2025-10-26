@@ -1,5 +1,6 @@
 package com.sighs.touhou_little_maid_contact.data;
 
+import com.flechazo.contact.Contact;
 import com.mafuyu404.oelib.api.data.DataDriven;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -43,7 +44,7 @@ public record MaidLetterRule(
                             .forGetter(MaidLetterRule::type),
                     Codec.STRING.fieldOf("id").forGetter(MaidLetterRule::id),
                     Codec.STRING.listOf().fieldOf("triggers")
-                            .xmap(list -> list.stream().map(ResourceLocation::new).toList(),
+                            .xmap(list -> list.stream().map(ResourceLocation::parse).toList(),
                                     rl -> rl.stream().map(ResourceLocation::toString).toList())
                             .forGetter(MaidLetterRule::triggers),
                     Codec.STRING.optionalFieldOf("trigger_type")
@@ -51,7 +52,8 @@ public record MaidLetterRule(
                                     t -> Optional.of(t.name().toLowerCase()))
                             .forGetter(MaidLetterRule::triggerType),
                     Codec.INT.optionalFieldOf("min_affection")
-                            .xmap(opt -> opt.orElse(0), Optional::of).forGetter(MaidLetterRule::minAffection),
+                            .xmap(opt -> opt.orElse(0), Optional::of)
+                            .forGetter(MaidLetterRule::minAffection),
                     Codec.INT.optionalFieldOf("max_affection")
                             .forGetter(MaidLetterRule::maxAffection),
                     Codec.INT.optionalFieldOf("cooldown")
@@ -60,6 +62,7 @@ public record MaidLetterRule(
                     AI.CODEC.optionalFieldOf("ai").forGetter(MaidLetterRule::ai)
             ).apply(instance, MaidLetterRule::new)
     );
+
 
     public record Preset(String title, String message, List<Gift> gifts) {
         public static final Codec<Preset> CODEC = RecordCodecBuilder.create(i ->
@@ -82,13 +85,14 @@ public record MaidLetterRule(
         public static final Codec<Gift> CODEC = RecordCodecBuilder.create(i ->
                 i.group(
                         Codec.STRING.fieldOf("parcel")
-                                .xmap(ResourceLocation::new, ResourceLocation::toString)
+                                .xmap(ResourceLocation::parse, ResourceLocation::toString)
                                 .forGetter(Gift::parcel),
                         Codec.STRING.fieldOf("postcard")
-                                .xmap(s -> s.contains(":") ? new ResourceLocation(s) : new ResourceLocation("contact", s),
+                                .xmap(s -> s.contains(":") ? ResourceLocation.parse(s) : ResourceLocation.fromNamespaceAndPath(Contact.MOD_ID, s),
                                         ResourceLocation::toString)
                                 .forGetter(Gift::postcard)
                 ).apply(i, Gift::new)
         );
     }
+
 }

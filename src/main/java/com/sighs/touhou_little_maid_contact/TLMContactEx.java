@@ -16,7 +16,7 @@ public class TLMContactEx implements ILittleMaid {
     @Override
     public void registerTaskData(TaskDataRegister register) {
         TaskDataKey<CompoundTag> key = register.register(
-                new ResourceLocation(TLMContact.MODID, "maid_letter_state"),
+                ResourceLocation.fromNamespaceAndPath(TLMContact.MODID, "maid_letter_state"),
                 CompoundTag.CODEC
         );
         LetterGenerationService.setDataKey(key);

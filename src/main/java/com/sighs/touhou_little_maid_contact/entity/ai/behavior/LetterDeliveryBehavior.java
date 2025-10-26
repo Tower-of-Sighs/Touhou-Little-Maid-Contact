@@ -4,6 +4,7 @@ import com.flechazo.contact.common.item.IPackageItem;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.github.tartaricacid.touhoulittlemaid.util.ItemsUtil;
 import com.mojang.logging.LogUtils;
+import com.sighs.touhou_little_maid_contact.component.TLMContactDataComponents;
 import com.sighs.touhou_little_maid_contact.config.Config;
 import com.sighs.touhou_little_maid_contact.util.HazardUtil;
 import com.sighs.touhou_little_maid_contact.util.MailboxSafetyEvaluator;
@@ -13,10 +14,17 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ai.behavior.Behavior;
 import net.minecraft.world.entity.ai.behavior.BehaviorControl;
+import net.neoforged.fml.loading.FMLLoader;
 import org.slf4j.Logger;
 
 public class LetterDeliveryBehavior implements BehaviorControl<EntityMaid> {
     private static final Logger LOGGER = LogUtils.getLogger();
+
+    private static void logDebug(String format, Object... params) {
+        if (!FMLLoader.isProduction()) {
+            LOGGER.debug(format, params);
+        }
+    }
 
     private static final double WALK_SPEED = 0.5;
     private static final double RUN_SPEED = 0.7;
@@ -89,10 +97,14 @@ public class LetterDeliveryBehavior implements BehaviorControl<EntityMaid> {
         // 到达判定
         double distSqr = maid.distanceToSqr(targetPos.getX() + 0.5, targetPos.getY(), targetPos.getZ() + 0.5);
         if (distSqr <= (HANDOVER_RADIUS * HANDOVER_RADIUS)) {
+            logDebug("[MaidMail][Delivery] Reached target maidId={} targetType={} distance={}", 
+                    maid.getId(), targetType, Math.sqrt(distSqr));
             LetterDeliveryService.tryDeliverLetter(maid);
             if (!hasLetter(maid)) {
+                logDebug("[MaidMail][Delivery] Letter delivered successfully maidId={}", maid.getId());
                 stayTick = STAY_MIN + maid.getRandom().nextInt(STAY_MAX - STAY_MIN);
             } else {
+                LOGGER.warn("[MaidMail][Delivery] deliver failed near={} maidId={}", targetType, maid.getId());
                 replanCooldown = REPLAN_COOLDOWN;
             }
             return;
@@ -126,8 +138,7 @@ public class LetterDeliveryBehavior implements BehaviorControl<EntityMaid> {
     private boolean hasLetter(EntityMaid maid) {
         return ItemsUtil.isStackIn(maid, stack -> {
             if (!(stack.getItem() instanceof IPackageItem)) return false;
-            var tag = stack.getTag();
-            return tag != null && tag.getBoolean("MaidMail");
+            return Boolean.TRUE.equals(stack.get(TLMContactDataComponents.MAID_MAIL.get()));
         });
     }
 
@@ -144,11 +155,16 @@ public class LetterDeliveryBehavior implements BehaviorControl<EntityMaid> {
         boolean homeMode = maid.isHomeModeEnable();
         ServerPlayer owner = (ServerPlayer) maid.getOwner();
 
+        logDebug("[MaidMail][Delivery] Planning target maidId={} homeMode={} hasOwner={}", 
+                maid.getId(), homeMode, owner != null);
+
         if (!homeMode) {
             // 跟随模式：优先直接交给玩家
             if (owner != null) {
                 targetType = TargetType.OWNER;
                 targetPos = owner.blockPosition();
+                logDebug("[MaidMail][Delivery] Follow mode - targeting owner maidId={} ownerPos={}", 
+                        maid.getId(), targetPos);
             } else {
                 targetType = null;
                 targetPos = null;
@@ -161,7 +177,19 @@ public class LetterDeliveryBehavior implements BehaviorControl<EntityMaid> {
         int homeRadius = Math.max(4, (int) maid.getRestrictRadius());
         boolean ownerInHome = owner != null && maid.closerThan(owner, homeRadius);
 
+        logDebug("[MaidMail][Delivery] Home mode analysis maidId={} homeCenter={} homeRadius={} ownerInHome={}", 
+                maid.getId(), homeCenter, homeRadius, ownerInHome);
+
         var bestMailboxOpt = MailboxSafetyEvaluator.getBestUsableMailbox(level, homeCenter, Math.min(Config.MAILBOX_SEARCH_RADIUS.get(), homeRadius));
+
+        if (bestMailboxOpt.isPresent()) {
+            var mailbox = bestMailboxOpt.get();
+            logDebug("[MaidMail][Delivery] Found mailbox maidId={} pos={} safety={} quality={} usable={}", 
+                    maid.getId(), mailbox.pos(), mailbox.safetyScore(), mailbox.isHighQuality(), mailbox.isUsable());
+        } else {
+            logDebug("[MaidMail][Delivery] No mailbox found maidId={} searchRadius={}", 
+                    maid.getId(), Math.min(Config.MAILBOX_SEARCH_RADIUS.get(), homeRadius));
+        }
 
         if (ownerInHome) {
             if (bestMailboxOpt.isPresent()) {
@@ -169,19 +197,29 @@ public class LetterDeliveryBehavior implements BehaviorControl<EntityMaid> {
                 if (mailbox.isHighQuality() || mailbox.safetyScore() >= 60) {
                     targetType = TargetType.MAILBOX;
                     targetPos = mailbox.pos();
+                    logDebug("[MaidMail][Delivery] Owner in home - targeting mailbox maidId={} mailboxPos={} safety={}", 
+                            maid.getId(), targetPos, mailbox.safetyScore());
                     return;
+                } else {
+                    logDebug("[MaidMail][Delivery] Owner in home - mailbox quality too low maidId={} safety={}", 
+                            maid.getId(), mailbox.safetyScore());
                 }
             }
 
             targetType = TargetType.OWNER;
             targetPos = owner.blockPosition();
+            logDebug("[MaidMail][Delivery] Owner in home - targeting owner directly maidId={} ownerPos={}", 
+                    maid.getId(), targetPos);
         } else {
             if (bestMailboxOpt.isPresent() && bestMailboxOpt.get().isUsable()) {
                 targetType = TargetType.MAILBOX;
                 targetPos = bestMailboxOpt.get().pos();
+                logDebug("[MaidMail][Delivery] Owner not in home - targeting mailbox maidId={} mailboxPos={}", 
+                        maid.getId(), targetPos);
             } else {
                 targetType = null;
                 targetPos = null;
+                logDebug("[MaidMail][Delivery] Owner not in home - no usable mailbox maidId={}", maid.getId());
             }
         }
     }

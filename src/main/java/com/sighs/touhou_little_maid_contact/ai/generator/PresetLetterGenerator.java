@@ -1,6 +1,6 @@
 package com.sighs.touhou_little_maid_contact.ai.generator;
 
-import com.flechazo.contact.resourse.PostcardDataManager;
+import com.flechazo.contact.data.PostcardDataManager;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.mojang.logging.LogUtils;
 import com.sighs.touhou_little_maid_contact.api.letter.ILetterGenerator;

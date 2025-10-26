@@ -6,17 +6,24 @@ import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.github.tartaricacid.touhoulittlemaid.util.ItemsUtil;
 import com.mojang.logging.LogUtils;
 import com.sighs.touhou_little_maid_contact.api.letter.ILetterRule;
+import com.sighs.touhou_little_maid_contact.component.TLMContactDataComponents;
 import com.sighs.touhou_little_maid_contact.data.LetterRuleRegistry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.fml.loading.FMLLoader;
+import net.neoforged.fml.loading.FMLLoader;
 import org.slf4j.Logger;
 
 import java.util.List;
 
 public final class LetterGenerationService {
     private static final Logger LOGGER = LogUtils.getLogger();
+
+    private static void logDebug(String format, Object... params) {
+        if (!FMLLoader.isProduction()) {
+            LOGGER.debug(format, params);
+        }
+    }
     private static TaskDataKey<CompoundTag> RUNTIME_DATA_KEY;
 
     private LetterGenerationService() {
@@ -66,8 +73,7 @@ public final class LetterGenerationService {
     private static boolean hasLetter(EntityMaid maid) {
         return ItemsUtil.isStackIn(maid, stack -> {
             if (!(stack.getItem() instanceof IPackageItem)) return false;
-            var tag = stack.getTag();
-            return tag != null && tag.getBoolean("MaidMail");
+            return Boolean.TRUE.equals(stack.get(TLMContactDataComponents.MAID_MAIL.get()));
         });
     }
 

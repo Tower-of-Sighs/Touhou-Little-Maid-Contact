@@ -1,17 +1,18 @@
 package com.sighs.touhou_little_maid_contact.config;
 
-import net.minecraftforge.common.ForgeConfigSpec;
+
+import net.neoforged.neoforge.common.ModConfigSpec;
 
 public class AILetterConfig {
-    public static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
-    public static final ForgeConfigSpec SPEC;
+    public static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
+    public static final ModConfigSpec SPEC;
 
-    public static final ForgeConfigSpec.DoubleValue CREATIVITY_TEMPERATURE_BOOST;
-    public static final ForgeConfigSpec.IntValue MEMORY_SIZE;
-    public static final ForgeConfigSpec.BooleanValue ENABLE_CONTEXT_ENRICHMENT;
-    public static final ForgeConfigSpec.BooleanValue ENABLE_QUALITY_FILTER;
-    public static final ForgeConfigSpec.IntValue MIN_CONTENT_LENGTH;
-    public static final ForgeConfigSpec.IntValue MAX_GENERIC_PHRASES;
+    public static final ModConfigSpec.DoubleValue CREATIVITY_TEMPERATURE_BOOST;
+    public static final ModConfigSpec.IntValue MEMORY_SIZE;
+    public static final ModConfigSpec.BooleanValue ENABLE_CONTEXT_ENRICHMENT;
+    public static final ModConfigSpec.BooleanValue ENABLE_QUALITY_FILTER;
+    public static final ModConfigSpec.IntValue MIN_CONTENT_LENGTH;
+    public static final ModConfigSpec.IntValue MAX_GENERIC_PHRASES;
 
     static {
         BUILDER.push("ai_letter_generation");

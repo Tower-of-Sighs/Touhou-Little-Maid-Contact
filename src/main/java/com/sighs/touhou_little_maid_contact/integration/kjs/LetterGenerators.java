@@ -38,7 +38,7 @@ public final class LetterGenerators {
      */
     public static ILetterGenerator createPresetGenerator(String title, String message, String postcardId, String parcelId) {
         return new PresetLetterGenerator(title, message,
-                new ResourceLocation(postcardId),
-                new ResourceLocation(parcelId));
+                ResourceLocation.parse(postcardId),
+                ResourceLocation.parse(parcelId));
     }
 }

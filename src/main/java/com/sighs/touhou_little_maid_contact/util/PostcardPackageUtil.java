@@ -1,14 +1,17 @@
 package com.sighs.touhou_little_maid_contact.util;
 
+import com.flechazo.contact.Contact;
+import com.flechazo.contact.common.component.ContactDataComponents;
 import com.flechazo.contact.common.item.IPackageItem;
-import com.flechazo.contact.resourse.PostcardDataManager;
+import com.flechazo.contact.data.PostcardDataManager;
 import com.github.tartaricacid.touhoulittlemaid.util.ItemsUtil;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
+import com.sighs.touhou_little_maid_contact.component.TLMContactDataComponents;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.world.item.component.ItemContainerContents;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -80,21 +83,17 @@ public final class PostcardPackageUtil {
 
     public static ItemStack buildPackageWithPostcard(ResourceLocation packageId, String postcardText, ResourceLocation postcardId) {
         ItemStack packageStack = ItemsUtil.getItemStack(packageId.toString()).copy();
-        CompoundTag tag = packageStack.getOrCreateTag();
-        tag.putBoolean("MaidMail", true);
 
-        ListTag parcel = new ListTag();
-        CompoundTag entry = new CompoundTag();
-        entry.putString("id", "contact:postcard");
-        entry.putByte("Count", (byte) 1);
+        packageStack.set(TLMContactDataComponents.MAID_MAIL.get(), true);
 
-        CompoundTag postcardNbt = new CompoundTag();
-        postcardNbt.putString("Text", postcardText);
-        postcardNbt.putString("CardID", postcardId.toString());
+        ItemStack postcardStack = new ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.parse("contact:postcard")));
+        postcardStack.set(ContactDataComponents.POSTCARD_TEXT.get(), postcardText);
+        postcardStack.set(ContactDataComponents.POSTCARD_STYLE_ID.get(), postcardId);
 
-        entry.put("tag", postcardNbt);
-        parcel.add(entry);
-        tag.put("parcel", parcel);
+        List<ItemStack> containerItems = new ArrayList<>();
+        containerItems.add(postcardStack);
+        ItemContainerContents containerContents = ItemContainerContents.fromItems(containerItems);
+        packageStack.set(DataComponents.CONTAINER, containerContents);
 
         return packageStack;
     }
@@ -102,8 +101,8 @@ public final class PostcardPackageUtil {
     public static ResourceLocation choosePackageId(String parcelIdStr) {
         if (parcelIdStr != null && !parcelIdStr.isBlank()) {
             try {
-                ResourceLocation candidate = new ResourceLocation(parcelIdStr);
-                Item item = ForgeRegistries.ITEMS.getValue(candidate);
+                ResourceLocation candidate = ResourceLocation.parse(parcelIdStr);
+                Item item = BuiltInRegistries.ITEM.get(candidate);
                 if (item instanceof IPackageItem) {
                     return candidate;
                 }
@@ -113,14 +112,14 @@ public final class PostcardPackageUtil {
 
         List<ResourceLocation> packageIds = getAllPackageItemIds();
         return packageIds.isEmpty()
-                ? new ResourceLocation("contact", "letter")
+                ? ResourceLocation.fromNamespaceAndPath(Contact.MOD_ID, "letter")
                 : packageIds.get(ThreadLocalRandom.current().nextInt(packageIds.size()));
     }
 
     public static ResourceLocation choosePostcardId(String postcardIdStr) {
         if (postcardIdStr != null && !postcardIdStr.isBlank()) {
             try {
-                ResourceLocation candidate = new ResourceLocation(postcardIdStr);
+                ResourceLocation candidate = ResourceLocation.parse(postcardIdStr);
                 if (getAllPostcardIds().contains(candidate)) {
                     return candidate;
                 }
@@ -130,18 +129,16 @@ public final class PostcardPackageUtil {
 
         List<ResourceLocation> postcardIds = getAllPostcardIds();
         return postcardIds.isEmpty()
-                ? new ResourceLocation("contact", "default")
+                ? ResourceLocation.fromNamespaceAndPath(Contact.MOD_ID, "default")
                 : postcardIds.get(ThreadLocalRandom.current().nextInt(postcardIds.size()));
     }
 
     public static List<ResourceLocation> getAllPackageItemIds() {
         List<ResourceLocation> ids = new ArrayList<>();
-        for (var item : ForgeRegistries.ITEMS) {
+        for (var item : BuiltInRegistries.ITEM) {
             if (item instanceof IPackageItem) {
-                ResourceLocation id = ForgeRegistries.ITEMS.getKey(item);
-                if (id != null) {
-                    ids.add(id);
-                }
+                ResourceLocation id = BuiltInRegistries.ITEM.getKey(item);
+                ids.add(id);
             }
         }
         return ids;

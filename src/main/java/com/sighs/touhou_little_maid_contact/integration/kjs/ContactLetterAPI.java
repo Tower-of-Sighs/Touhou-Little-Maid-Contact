@@ -58,7 +58,7 @@ public final class ContactLetterAPI {
      * @param triggerId 触发器ID字符串
      */
     public static void triggerEvent(ServerPlayer player, String triggerId) {
-        triggerEvent(player, new ResourceLocation(triggerId));
+        triggerEvent(player, ResourceLocation.parse(triggerId));
     }
 
     /**
@@ -80,7 +80,7 @@ public final class ContactLetterAPI {
      * @return 是否有该触发器
      */
     public static boolean hasTriggered(ServerPlayer player, String triggerId) {
-        return hasTriggered(player, new ResourceLocation(triggerId));
+        return hasTriggered(player, ResourceLocation.parse(triggerId));
     }
 
     /**
@@ -100,7 +100,7 @@ public final class ContactLetterAPI {
      * @param triggerId 触发器ID字符串
      */
     public static void clearTrigger(ServerPlayer player, String triggerId) {
-        clearTrigger(player, new ResourceLocation(triggerId));
+        clearTrigger(player, ResourceLocation.parse(triggerId));
     }
 
     /**

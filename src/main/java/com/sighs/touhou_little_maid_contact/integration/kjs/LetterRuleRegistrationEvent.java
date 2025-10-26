@@ -3,9 +3,9 @@ package com.sighs.touhou_little_maid_contact.integration.kjs;
 import com.sighs.touhou_little_maid_contact.api.integration.ILetterRuleBuilder;
 import com.sighs.touhou_little_maid_contact.api.letter.ILetterRule;
 import com.sighs.touhou_little_maid_contact.data.LetterRuleRegistry;
-import dev.latvian.mods.kubejs.event.EventJS;
+import dev.latvian.mods.kubejs.event.KubeEvent;
 
-public class LetterRuleRegistrationEvent extends EventJS {
+public class LetterRuleRegistrationEvent implements KubeEvent {
 
     /**
      * 创建新的信件规则构建器

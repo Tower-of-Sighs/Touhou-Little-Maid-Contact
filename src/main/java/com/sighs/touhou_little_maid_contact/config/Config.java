@@ -1,23 +1,26 @@
 package com.sighs.touhou_little_maid_contact.config;
 
-import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.fml.ModLoadingContext;
-import net.minecraftforge.fml.config.ModConfig;
+
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.ModLoadingContext;
+import net.neoforged.fml.config.ModConfig;
+import net.neoforged.neoforge.common.ModConfigSpec;
 
 public final class Config {
-    public static final ForgeConfigSpec SERVER_SPEC;
+    public static final ModConfigSpec SERVER_SPEC;
 
-    public static final ForgeConfigSpec.IntValue MAILBOX_SEARCH_RADIUS;
+    public static final ModConfigSpec.IntValue MAILBOX_SEARCH_RADIUS;
 
-    public static final ForgeConfigSpec.IntValue MAILBOX_MIN_SAFETY_SCORE;
-    public static final ForgeConfigSpec.IntValue AREA_HAZARD_THRESHOLD;
-    public static final ForgeConfigSpec.IntValue HIGH_QUALITY_THRESHOLD;
+    public static final ModConfigSpec.IntValue MAILBOX_MIN_SAFETY_SCORE;
+    public static final ModConfigSpec.IntValue AREA_HAZARD_THRESHOLD;
+    public static final ModConfigSpec.IntValue HIGH_QUALITY_THRESHOLD;
 
-    public static final ForgeConfigSpec.IntValue PATH_SAFETY_PERCENTAGE;
-    public static final ForgeConfigSpec.IntValue MAX_CONSECUTIVE_DANGEROUS;
+    public static final ModConfigSpec.IntValue PATH_SAFETY_PERCENTAGE;
+    public static final ModConfigSpec.IntValue MAX_CONSECUTIVE_DANGEROUS;
 
     static {
-        ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
+        ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
 
         builder.push("mail_delivery");
         MAILBOX_SEARCH_RADIUS = builder
@@ -52,8 +55,8 @@ public final class Config {
         SERVER_SPEC = builder.build();
     }
 
-    public static void register() {
-        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, SERVER_SPEC);
-        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, AILetterConfig.SPEC);
+    public static void register(ModContainer modContainer) {
+        modContainer.registerConfig(ModConfig.Type.COMMON, SERVER_SPEC);
+        modContainer.registerConfig(ModConfig.Type.CLIENT, AILetterConfig.SPEC);
     }
 }
