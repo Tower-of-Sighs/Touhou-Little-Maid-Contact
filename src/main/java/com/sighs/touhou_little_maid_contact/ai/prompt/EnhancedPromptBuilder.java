@@ -190,7 +190,7 @@ public class EnhancedPromptBuilder implements IPromptBuilder {
         StringBuilder constraints = new StringBuilder("请避免使用以下最近使用过的表达方式：\n");
         int count = 0;
         for (String content : recentContent) {
-            if (count >= 3) break; // 只显示最近3次的内容
+            if (count >= 5) break; // 只显示最近5次的内容
             constraints.append("- ").append(content).append("\n");
             count++;
         }

@@ -13,21 +13,11 @@ public class MaidLetterCommand {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("maidletter")
-                .then(Commands.literal("test")
-                        .executes(MaidLetterCommand::executeTest))
                 .then(Commands.literal("trigger")
                         .then(Commands.literal("first_gift")
+                                .requires(source -> source.hasPermission(4))
                                 .executes(MaidLetterCommand::executeFirstGift)))
         );
-    }
-
-    private static int executeTest(CommandContext<CommandSourceStack> context) {
-        CommandSourceStack source = context.getSource();
-        if (source.getEntity() instanceof ServerPlayer player) {
-            source.sendSuccess(() -> Component.literal("女仆信件系统测试命令执行成功！"), false);
-            return 1;
-        }
-        return 0;
     }
 
     private static int executeFirstGift(CommandContext<CommandSourceStack> context) {
