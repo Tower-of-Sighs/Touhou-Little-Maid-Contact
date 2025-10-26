@@ -10,6 +10,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.loading.FMLLoader;
 import org.slf4j.Logger;
 
 @Mod(TLMContact.MODID)
@@ -29,6 +30,8 @@ public class TLMContact {
 
     @SubscribeEvent
     public void onRegisterCommands(RegisterCommandsEvent event) {
-        MaidLetterCommand.register(event.getDispatcher());
+        if (!FMLLoader.isProduction()) {
+            MaidLetterCommand.register(event.getDispatcher());
+        }
     }
 }
