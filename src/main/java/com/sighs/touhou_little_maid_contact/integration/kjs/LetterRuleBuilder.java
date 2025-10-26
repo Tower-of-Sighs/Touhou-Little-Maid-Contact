@@ -38,14 +38,16 @@ public class LetterRuleBuilder implements ILetterRuleBuilder {
     }
 
     @Override
-    public ILetterRuleBuilder trigger(ResourceLocation triggerId) {
-        this.triggers.add(triggerId);
+    public ILetterRuleBuilder trigger(String triggerId) {
+        this.triggers.add(new ResourceLocation(triggerId));
         return this;
     }
 
     @Override
-    public ILetterRuleBuilder triggers(List<ResourceLocation> triggerIds) {
-        this.triggers.addAll(triggerIds);
+    public ILetterRuleBuilder triggers(List<String> triggerIds) {
+        for (String id : triggerIds) {
+            this.triggers.add(new ResourceLocation(id));
+        }
         return this;
     }
 

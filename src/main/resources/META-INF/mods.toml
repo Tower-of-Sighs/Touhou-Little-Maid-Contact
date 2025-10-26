@@ -26,13 +26,13 @@ side = "BOTH"
 [[dependencies."${mod_id}"]]
 modId = "contact"
 mandatory = true
-versionRange = "${contact_version_range}"
+versionRange = "[1.2.1,)"
 ordering = "NONE"
 side = "BOTH"
 
 [[dependencies."${mod_id}"]]
 modId = "touhou_little_maid"
 mandatory = true
-versionRange = "${tlm_version_range}"
+versionRange = "[1.0.0,)"
 ordering = "NONE"
 side = "BOTH"

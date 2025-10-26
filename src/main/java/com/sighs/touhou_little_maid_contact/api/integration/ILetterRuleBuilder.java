@@ -2,7 +2,6 @@ package com.sighs.touhou_little_maid_contact.api.integration;
 
 import com.sighs.touhou_little_maid_contact.api.letter.ILetterGenerator;
 import com.sighs.touhou_little_maid_contact.api.letter.ILetterRule;
-import net.minecraft.resources.ResourceLocation;
 
 import java.util.List;
 
@@ -35,7 +34,7 @@ public interface ILetterRuleBuilder {
      *
      * @param triggerId 触发器ID
      */
-    ILetterRuleBuilder trigger(ResourceLocation triggerId);
+    ILetterRuleBuilder trigger(String triggerId);
 
 
     /**
@@ -43,7 +42,7 @@ public interface ILetterRuleBuilder {
      *
      * @param triggerIds 触发器ID列表
      */
-    ILetterRuleBuilder triggers(List<ResourceLocation> triggerIds);
+    ILetterRuleBuilder triggers(List<String> triggerIds);
 
     /**
      * 设置触发器类型
