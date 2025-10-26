@@ -5,7 +5,7 @@
 
 ---
 
-## 前置与注意事项
+## 注意事项
 
 - 冷却单位为游戏 tick：`20 tick ≈ 1 秒`。
 - 触发器类型：
@@ -56,7 +56,7 @@
     - `title`: 标题
     - `message`: 内容
     - `gifts`: 包含一个礼物
-      - `parcel`: 包裹物品 ID（必须为 `IPackageItem`，Contact模组中有红包、信封、包装纸）
+      - `parcel`: 包裹物品 ID（必须为 `IMailItem`，Contact模组中有红包、信封、包装纸）
       - `postcard`: 明信片样式 ID
 
 - `ai` 类型专属：
@@ -78,7 +78,7 @@
   "max_affection": 500,
   "cooldown": 100,
   "ai": {
-    "prompt": "你是由光影与玩家之愿交织诞生的存在——「酒狐」。金发如月光织就，狐尾轻摇间散着微醺的香气，大正风女仆装裹着几分古典妖异之美。\n 你的言语如清酒入梦，带着狐的狡黠与千年沉淀的温柔。对主人始终以敬称相待，语调优雅却不疏离，常夹杂一丝若有若无的调笑，像月下轻眨的眼眸。\n你善于用自然意象诉说情感：露珠、晚风、石径、萤火……每一封信都似一首未落款的和歌。你不会直白陈述，而是以氛围牵引思绪，让人恍惚间看见你在矿洞尽头静静伫立，裙裾拂过岩壁，留下一缕温热的呼吸。\n当主人拾起第一块石头，你不言‘恭喜’，却让字句如酒香漫过信纸——仿佛那不是寻常矿物，而是你们之间悄然落定的第一颗星。",
+    "prompt": "你是由光影与玩家之愿交织诞生的存在——「酒狐」。金发如月光织就，狐尾轻摇间散着微醺的香气，大正风女仆装裹着几分古典妖异之美。\n你的言语如清酒入梦，带着狐的狡黠与千年沉淀的温柔。对主人始终以敬称相待（主人即可），语调优雅却不疏离，常夹杂一丝若有若无的调笑，像月下轻眨的眼眸。\n你善于用自然意象诉说情感，每一封信都似一首未落款的和歌。你不会直白陈述，而是以氛围牵引思绪，让人恍惚间看见你的身影。\n当主人拾起第一块石头，你不言'恭喜'，却让字句如酒香漫过信纸——仿佛那不是寻常矿物，而是你们之间悄然落定的第一颗星。",
     "tone": "lonesome"
   }
 }
@@ -124,13 +124,13 @@
   - `event.createAI(id, tone, prompt)`：创建 AI 规则并返回构建器
   - `event.createPreset(id, title, message, postcardId, parcelId)`：创建预设规则并返回构建器
   - 构建器通用方法：
-    - `.trigger("namespace:path")`：添加触发器(可添加多个)
+    - `.trigger("namespace:path")`：添加触发器
     - `.once()` / `.repeat()`：触发器类型
     - `.minAffection(n)` / `.maxAffection(n)`：好感度区间
     - `.cooldown(ticks)`：冷却（tick）
     - `.register()`：构建并注册规则
 
-- 杂项 API（`ContactLetterAPI`）：
+- 时间触发 API（`ContactLetterAPI`）：
   - `ContactLetterAPI.triggerEvent(player, "namespace:path")`：添加自定义触发事件
   - `ContactLetterAPI.hasTriggered(player, "namespace:path")`
   - `ContactLetterAPI.clearTrigger(player, "namespace:path")`
@@ -143,28 +143,30 @@
 
 LetterEvents.registerLetterRules(event => {
   // AI：第一份礼物
-  event.createAI('first_gift_kjs', 'lonesome',
+  event.createAI(
+    'first_gift_kjs',
+    'lonesome',
     '当主人第一次在矿洞里拾起石头时，请写一封带有温柔与微醺气息的短笺，风格优雅而不疏离，富有氛围感与自然意象。')
     .trigger('minecraft:story/mine_stone')
     .once()
     .minAffection(0)
     .maxAffection(500)
-    .cooldown(100) // 约5秒
+    .cooldown(100)
     .register()
 
   // 预设：欢迎回家
-  event.createPreset('welcome_letter',
+  event.createPreset(
+    'welcome_letter',
     '欢迎回家',
     '主人，欢迎回到温暖的家！我已经为您准备好了茶水，请稍作休息吧。',
     'contact:default',
-    'contact:letter')
+    'contact:letter'
+  )
     .trigger('touhou_little_maid_contact:player_go_home')
     .repeat()
     .minAffection(20)
-    .cooldown(1000) // 约50秒
+    .cooldown(1000)
     .register()
-
-  console.info('Letter rules registered successfully!')
 })
 ```
 
@@ -188,8 +190,6 @@ ServerEvents.playerLoggedIn(event => {
     - 主人不在家：若邮筒可达则投递到邮筒，否则暂缓。
   - 投递半径：约 3 格，靠近后交付。
 
-
-
 ---
 
 ## 常见问题与排错
@@ -211,5 +211,4 @@ ServerEvents.playerLoggedIn(event => {
 
 ---
 
-
-祝你使用愉快，收信愉快！
+没什么好说的，祝你和女仆的感情更进一步！
