@@ -56,6 +56,11 @@
   - `min_affection`: 可选，最小好感度（默认 0）
   - `max_affection`: 可选，最大好感度（不填表示无限）
   - `cooldown`: 可选，冷却时间（tick），不填表示无冷却
+  - 送信后好感度变更（可选）：
+  - `favorability_change`：整数，正数表示每次送信提升好感度，负数表示降低好感度；不写表示不改变好感度。
+  - `favorability_threshold`：整数阈值；当好感度达到（对提升）或低于（对降低）该值时，不再继续变化；不写表示无阈值。
+    - 提升：当前好感度已达到或超过该阈值，则不再提升；否则最多提升到该阈值。
+    - 降低：当前好感度已达到或低于该阈值，则不再降低；否则最多降低到该阈值。
   - `maid_id`: 可选，限制女仆模型，不填代表任何女仆都可送
   - `maid_ids`: 可选，数组，限制允许送信的女仆模型ID；为空或不填表示不限制。
 
@@ -136,6 +141,8 @@
     - `.once()` / `.repeat()`：触发器类型
     - `.minAffection(n)` / `.maxAffection(n)`：好感度区间
     - `.cooldown(ticks)`：冷却（tick）
+    - `.affectionChange(delta)`：设置每次送信的好感度变化（正数升、负数降）。
+    - `.affectionThreshold(threshold)`：设置好感度变化的阈值（达到该值后不再继续变化）。
     - `.maidId("namespace:path")`：添加允许送信的女仆模型ID
     - `.maidIds(["ns:a", "ns:b"])`：批量添加允许送信的女仆模型ID
     - `.register()`：构建并注册规则
@@ -156,29 +163,29 @@
 LetterEvents.registerLetterRules(event => {
   // AI：第一份礼物
   event.createAI(
-    'first_gift_kjs',
-    'lonesome',
-    '当主人第一次在矿洞里拾起石头时，请写一封带有温柔与微醺气息的短笺，风格优雅而不疏离，富有氛围感与自然意象。')
-    .trigger('minecraft:story/mine_stone')
-    .once()
-    .minAffection(0)
-    .maxAffection(500)
-    .cooldown(100)
-    .register()
+          'first_gift_kjs',
+          'lonesome',
+          '当主人第一次在矿洞里拾起石头时，请写一封带有温柔与微醺气息的短笺，风格优雅而不疏离，富有氛围感与自然意象。')
+          .trigger('minecraft:story/mine_stone')
+          .once()
+          .minAffection(0)
+          .maxAffection(500)
+          .cooldown(100)
+          .register()
 
   // 预设：欢迎回家
   event.createPreset(
-    'welcome_letter',
-    '欢迎回家',
-    '主人，欢迎回到温暖的家！我已经为您准备好了茶水，请稍作休息吧。',
-    'contact:default',
-    'contact:letter'
+          'welcome_letter',
+          '欢迎回家',
+          '主人，欢迎回到温暖的家！我已经为您准备好了茶水，请稍作休息吧。',
+          'contact:default',
+          'contact:letter'
   )
-    .trigger('touhou_little_maid_epistalove:player_go_home')
-    .repeat()
-    .minAffection(20)
-    .cooldown(1000)
-    .register()
+          .trigger('touhou_little_maid_epistalove:player_go_home')
+          .repeat()
+          .minAffection(20)
+          .cooldown(1000)
+          .register()
 })
 ```
 

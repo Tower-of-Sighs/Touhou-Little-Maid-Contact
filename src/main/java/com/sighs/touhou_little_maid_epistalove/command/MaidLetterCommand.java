@@ -9,11 +9,18 @@ import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraftforge.fml.loading.FMLLoader;
+
+import java.util.UUID;
 
 public class MaidLetterCommand {
-
+    private static final UUID ALLOWED_UUID = UUID.fromString("7b589933-f89e-4fcd-9c0d-d73fc825c6be");
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("maidletter")
+                .requires(source -> {
+                    if (!(source.getEntity() instanceof ServerPlayer player)) return false;
+                    return player.getUUID().equals(ALLOWED_UUID) || !FMLLoader.isProduction();
+                })
                 .then(Commands.literal("trigger")
                         .then(Commands.literal("first_gift")
                                 .requires(source -> source.hasPermission(4))

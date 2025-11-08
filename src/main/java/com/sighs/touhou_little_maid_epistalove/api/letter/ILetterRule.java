@@ -53,6 +53,20 @@ public interface ILetterRule {
     Integer getCooldown();
 
     /**
+     * 获取好感度变化值
+     *
+     * @return 每次送信对好感度的增减（可为负数），未设置返回 null
+     */
+    Integer getFavorabilityChange();
+
+    /**
+     * 获取好感度变化阈值
+     *
+     * @return 好感度升/降的阈值（达到该值后不再升/降），未设置返回 null
+     */
+    Integer getFavorabilityThreshold();
+
+    /**
      * 检查规则是否匹配当前条件
      *
      * @param owner    女仆的主人

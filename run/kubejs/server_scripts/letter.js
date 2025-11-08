@@ -7,6 +7,8 @@ LetterEvents.registerLetterRules(event => {
         .minAffection(0)
         .maxAffection(500)
         .cooldown(100)
+        .affectionChange(-100)
+        .affectionThreshold(0)
         .register()
 
     event.createPreset('welcome_letter',

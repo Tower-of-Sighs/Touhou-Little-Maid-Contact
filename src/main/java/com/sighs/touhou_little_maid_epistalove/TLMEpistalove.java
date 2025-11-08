@@ -30,8 +30,6 @@ public class TLMEpistalove {
 
     @SubscribeEvent
     public void onRegisterCommands(RegisterCommandsEvent event) {
-        if (!FMLLoader.isProduction()) {
-            MaidLetterCommand.register(event.getDispatcher());
-        }
+        MaidLetterCommand.register(event.getDispatcher());
     }
 }

@@ -59,6 +59,20 @@ public interface ILetterRuleBuilder {
     ILetterRuleBuilder cooldown(int cooldown);
 
     /**
+     * 设置每次送信的好感度变化（正数升，负数降）
+     *
+     * @param delta 好感度变化值
+     */
+    ILetterRuleBuilder affectionChange(int delta);
+
+    /**
+     * 设置好感度升/降的阈值（达到该值后不再继续变动）
+     *
+     * @param threshold 好感度阈值
+     */
+    ILetterRuleBuilder affectionThreshold(int threshold);
+
+    /**
      * 设置信件生成器
      *
      * @param generator 信件生成器

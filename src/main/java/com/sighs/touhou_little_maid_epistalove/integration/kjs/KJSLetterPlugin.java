@@ -20,7 +20,7 @@ public class KJSLetterPlugin extends KubeJSPlugin {
 
     @Override
     public void registerBindings(BindingsEvent event) {
-        event.add("ContactLetterAPI", LetterAPI.class);
+        event.add("LetterAPI", LetterAPI.class);
         event.add("LetterGenerators", LetterGenerators.class);
 
         event.add("LetterRuleBuilder", LetterRuleBuilder.class);
