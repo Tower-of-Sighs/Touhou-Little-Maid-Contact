@@ -1,4 +1,4 @@
-# Touhou Little Maid: Contact 玩家使用教程（数据包 & KubeJS）
+# Touhou Little Maid: Epistalove 玩家使用教程（数据包 & KubeJS）
 
 本教程面向普通玩家，详细介绍如何通过**数据包**和**KubeJS 脚本**两种方式为女仆添加**写信**规则，包括 AI 信件与预设信件。你可以按需选择其中一种或两种一起用。
 
@@ -10,8 +10,8 @@
 - 冷却单位为游戏 tick：`20 tick ≈ 1 秒`。
 - 触发器类型：
   - `once`：一次性触发，触发后会被消费，且消费记录持久化（跨会话）。如需查询或清除该消费记录，提供 KJS API：
-    - `ContactLetterAPI.hasConsumedOnce(player, ruleId, triggerId)`
-    - `ContactLetterAPI.clearConsumedOnce(player, ruleId, triggerId)`
+    - `LetterAPI.hasConsumedOnce(player, ruleId, triggerId)`
+    - `LetterAPI.clearConsumedOnce(player, ruleId, triggerId)`
   - `repeat`：可重复触发（受冷却控制）。
 
 ### 成就触发说明
@@ -30,7 +30,7 @@
   <你的数据包>/
   ├── pack.mcmeta
   └── data/
-      └── touhou_little_maid_contact/
+      └── touhou_little_maid_epistalove/
           └── maid_letters/
               ├── first_gift.json
               └── welcome_letter.json
@@ -41,7 +41,7 @@
   {
     "pack": {
       "pack_format": 15,
-      "description": "Touhou Little Maid-Contact letter rules"
+      "description": "Touhou Little Maid: Epistalove letter rules"
     }
   }
   ```
@@ -51,7 +51,7 @@
 - 通用字段：
   - `type`: `"preset"` 或 `"ai"`
   - `id`: 规则 ID（唯一）
-  - `triggers`: 触发器列表（资源定位符，可填原版成就 `"minecraft:story/mine_stone"`或自定义触发事件`touhou_little_maid_contact:first_gift_trigger`）
+  - `triggers`: 触发器列表（资源定位符，可填原版成就 `"minecraft:story/mine_stone"`或自定义触发事件`touhou_little_maid_epistalove:first_gift_trigger`）
   - `trigger_type`: 可选，`"once"`（一次性）或 `"persistent"`（可重复触发）。
   - `min_affection`: 可选，最小好感度（默认 0）
   - `max_affection`: 可选，最大好感度（不填表示无限）
@@ -79,7 +79,7 @@
   "type": "ai",
   "id": "first_gift_json",
   "triggers": [
-    "touhou_little_maid_contact:first_gift_trigger"
+    "touhou_little_maid_epistalove:first_gift_trigger"
   ],
   "trigger_type": "once",
   "min_affection": 0,
@@ -99,7 +99,7 @@
   "type": "preset",
   "id": "welcome_letter_json",
   "triggers": [
-    "touhou_little_maid_contact:player_go_home"
+    "touhou_little_maid_epistalove:player_go_home"
   ],
   "trigger_type": "persistent",
   "min_affection": 20,
@@ -140,13 +140,13 @@
     - `.maidIds(["ns:a", "ns:b"])`：批量添加允许送信的女仆模型ID
     - `.register()`：构建并注册规则
 
-- 时间触发 API（`ContactLetterAPI`）：
-  - `ContactLetterAPI.triggerEvent(player, "namespace:path")`：添加自定义触发事件
-  - `ContactLetterAPI.hasTriggered(player, "namespace:path")`：检查玩家是否有指定触发器
-  - `ContactLetterAPI.clearTrigger(player, "namespace:path")`：清除指定事件的触发记录
-  - `ContactLetterAPI.clearAllTriggers(player)`：清除所有触发记录
-  - `ContactLetterAPI.hasConsumedOnce(player, ruleId, triggerId)` 查询某规则的自定义触发器是否已一次性消费
-  - `ContactLetterAPI.clearConsumedOnce(player, ruleId, triggerId)` 清除某规则的自定义触发器一次性消费记录
+- 时间触发 API（`LetterAPI`）：
+  - `LetterAPI.triggerEvent(player, "namespace:path")`：添加自定义触发事件
+  - `LetterAPI.hasTriggered(player, "namespace:path")`：检查玩家是否有指定触发器
+  - `LetterAPI.clearTrigger(player, "namespace:path")`：清除指定事件的触发记录
+  - `LetterAPI.clearAllTriggers(player)`：清除所有触发记录
+  - `LetterAPI.hasConsumedOnce(player, ruleId, triggerId)` 查询某规则的自定义触发器是否已一次性消费
+  - `LetterAPI.clearConsumedOnce(player, ruleId, triggerId)` 清除某规则的自定义触发器一次性消费记录
 
 ### 示例脚本
 
@@ -174,7 +174,7 @@ LetterEvents.registerLetterRules(event => {
     'contact:default',
     'contact:letter'
   )
-    .trigger('touhou_little_maid_contact:player_go_home')
+    .trigger('touhou_little_maid_epistalove:player_go_home')
     .repeat()
     .minAffection(20)
     .cooldown(1000)
@@ -187,7 +187,7 @@ LetterEvents.registerLetterRules(event => {
 ```js
 ServerEvents.playerLoggedIn(event => {
   const player = event.player
-  ContactLetterAPI.triggerEvent(player, 'touhou_little_maid_contact:player_join')
+  LetterAPI.triggerEvent(player, 'touhou_little_maid_epistalove:player_join')
 })
 ```
 
