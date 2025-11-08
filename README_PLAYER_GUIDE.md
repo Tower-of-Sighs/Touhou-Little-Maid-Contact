@@ -51,12 +51,12 @@
 - 通用字段：
   - `type`: `"preset"` 或 `"ai"`
   - `id`: 规则 ID（唯一）
-  - `model_id`: 可选，限制女仆模型，不填代表任何女仆都可送
   - `triggers`: 触发器列表（资源定位符，可填原版成就 `"minecraft:story/mine_stone"`或自定义触发事件`touhou_little_maid_contact:first_gift_trigger`）
   - `trigger_type`: 可选，`"once"`（一次性）或 `"persistent"`（可重复触发）。
   - `min_affection`: 可选，最小好感度（默认 0）
   - `max_affection`: 可选，最大好感度（不填表示无限）
   - `cooldown`: 可选，冷却时间（tick），不填表示无冷却
+  - `maid_id`: 可选，限制女仆模型，不填代表任何女仆都可送
   - `maid_ids`: 可选，数组，限制允许送信的女仆模型ID；为空或不填表示不限制。
 
 - `preset` 类型专属：
