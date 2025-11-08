@@ -62,16 +62,16 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
     // OELib
-    modImplementation "curse.maven:oelib-1319210:7060452"
-    modCompileOnly "curse.maven:oelib-1319210:7060452"
+    modImplementation "curse.maven:oelib-1319210:6882793"
+    modImplementation "dev.architectury:architectury-fabric:${project.architectury_api_version}"
 
     // Contact
-    modImplementation(files("libs/Contact-fabric-1.20.1-1.2.2.jar"))
-    modImplementation   "curse.maven:jupiter-1072905:6843040"
+    modImplementation(files("libs/Contact-fabric-1.21.1-1.2.2.jar"))
+    modImplementation "curse.maven:jupiter-1072905:6843051"
     modImplementation "dev.onyxstudios.cardinal-components-api:cardinal-components-world:${project.cca_version}"
 
     // Sodium
-    modImplementation "curse.maven:sodium-394468:6260639"
+    modImplementation "curse.maven:sodium-394468:6382649"
 
     // JEI
     modCompileOnly("mezz.jei:jei-${minecraft_version}-common-api:${jei_version}")
@@ -79,7 +79,7 @@ dependencies {
     modRuntimeOnly("mezz.jei:jei-${minecraft_version}-fabric:${jei_version}")
 
     // TLM
-    modImplementation "curse.maven:touhoulittlemaid-orihime-1311287:7194741"
+    modImplementation "curse.maven:touhoulittlemaid-orihime-1311287:7198888"
     modApi "fuzs.forgeconfigapiport:forgeconfigapiport-fabric:${project.fcap_version}"
     modImplementation(files("libs/reach-entity-attributes-2.4.0.jar"))
     modImplementation(files("libs/common-2.3.8+1.20.1.jar"))
@@ -95,16 +95,12 @@ dependencies {
     // ModMenu
     modImplementation("com.terraformersmc:modmenu:${project.modmenu_version}")
 
-    // Kubejs
-    modImplementation "curse.maven:kubejs-238086:5853321"
-    modImplementation "curse.maven:rhino-416294:6186969"
-    modImplementation "dev.architectury:architectury-fabric:$rootProject.architectury_api_version"
 
     // Cloth Config API
     modImplementation "me.shedaniel.cloth:cloth-config-fabric:${project.clothconfig_version}"
 
     // KIWI
-    modImplementation "curse.maven:kiwi-fabric-549404:6466894"
+    modImplementation "curse.maven:kiwi-fabric-549404:6313355"
 }
 
 processResources {
