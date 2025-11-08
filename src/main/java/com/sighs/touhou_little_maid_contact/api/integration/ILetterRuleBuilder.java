@@ -66,6 +66,20 @@ public interface ILetterRuleBuilder {
     ILetterRuleBuilder generator(ILetterGenerator generator);
 
     /**
+     * 限定女仆模型ID（单个），不设置则不限制
+     *
+     * @param maidId 模型资源ID
+     */
+    ILetterRuleBuilder maidId(String maidId);
+
+    /**
+     * 限定多组女仆模型ID（批量），不设置则不限制
+     *
+     * @param maidId 模型资源ID
+     */
+    ILetterRuleBuilder maidIds(List<String> maidId);
+
+    /**
      * 构建信件规则
      *
      * @return 构建完成的信件规则

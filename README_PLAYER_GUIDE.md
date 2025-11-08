@@ -9,8 +9,14 @@
 
 - 冷却单位为游戏 tick：`20 tick ≈ 1 秒`。
 - 触发器类型：
-  - `once`：一次性触发，触发后会被消费。
-  - `repeat`：可重复触发，触发后一直有效。
+  - `once`：一次性触发，触发后会被消费，且消费记录持久化（跨会话）。如需查询或清除该消费记录，提供 KJS API：
+    - `ContactLetterAPI.hasConsumedOnce(player, ruleId, triggerId)`
+    - `ContactLetterAPI.clearConsumedOnce(player, ruleId, triggerId)`
+  - `repeat`：可重复触发（受冷却控制）。
+
+### 成就触发说明
+
+- 成就事件不区分 `once/repeat`，仅在“新获得该成就”的事件边沿触发（Forge 的 `AdvancementEvent`）。
 
 ---
 
@@ -45,11 +51,13 @@
 - 通用字段：
   - `type`: `"preset"` 或 `"ai"`
   - `id`: 规则 ID（唯一）
+  - `model_id`: 可选，限制女仆模型，不填代表任何女仆都可送
   - `triggers`: 触发器列表（资源定位符，可填原版成就 `"minecraft:story/mine_stone"`或自定义触发事件`touhou_little_maid_contact:first_gift_trigger`）
   - `trigger_type`: 可选，`"once"`（一次性）或 `"persistent"`（可重复触发）。
   - `min_affection`: 可选，最小好感度（默认 0）
   - `max_affection`: 可选，最大好感度（不填表示无限）
   - `cooldown`: 可选，冷却时间（tick），不填表示无冷却
+  - `maid_ids`: 可选，数组，限制允许送信的女仆模型ID；为空或不填表示不限制。
 
 - `preset` 类型专属：
   - `preset`：
@@ -128,13 +136,17 @@
     - `.once()` / `.repeat()`：触发器类型
     - `.minAffection(n)` / `.maxAffection(n)`：好感度区间
     - `.cooldown(ticks)`：冷却（tick）
+    - `.maidId("namespace:path")`：添加允许送信的女仆模型ID
+    - `.maidIds(["ns:a", "ns:b"])`：批量添加允许送信的女仆模型ID
     - `.register()`：构建并注册规则
 
 - 时间触发 API（`ContactLetterAPI`）：
   - `ContactLetterAPI.triggerEvent(player, "namespace:path")`：添加自定义触发事件
-  - `ContactLetterAPI.hasTriggered(player, "namespace:path")`
-  - `ContactLetterAPI.clearTrigger(player, "namespace:path")`
-  - `ContactLetterAPI.clearAllTriggers(player)`
+  - `ContactLetterAPI.hasTriggered(player, "namespace:path")`：检查玩家是否有指定触发器
+  - `ContactLetterAPI.clearTrigger(player, "namespace:path")`：清除指定事件的触发记录
+  - `ContactLetterAPI.clearAllTriggers(player)`：清除所有触发记录
+  - `ContactLetterAPI.hasConsumedOnce(player, ruleId, triggerId)` 查询某规则的自定义触发器是否已一次性消费
+  - `ContactLetterAPI.clearConsumedOnce(player, ruleId, triggerId)` 清除某规则的自定义触发器一次性消费记录
 
 ### 示例脚本
 

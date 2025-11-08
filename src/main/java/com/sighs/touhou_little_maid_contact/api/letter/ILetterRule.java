@@ -91,4 +91,9 @@ public interface ILetterRule {
          */
         REPEAT
     }
+
+    /**
+     * 获取要求的女仆模型ID列表（可选，空或null表示不限制）
+     */
+    List<ResourceLocation> getRequiredMaidIds();
 }

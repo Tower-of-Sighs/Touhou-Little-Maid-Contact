@@ -25,7 +25,8 @@ public record MaidLetterRule(
         Optional<Integer> maxAffection,
         Optional<Integer> cooldown,
         Optional<Preset> preset,
-        Optional<AI> ai
+        Optional<AI> ai,
+        Optional<List<ResourceLocation>> maidIds
 ) {
     public enum Type {
         PRESET, AI
@@ -57,7 +58,14 @@ public record MaidLetterRule(
                     Codec.INT.optionalFieldOf("cooldown")
                             .forGetter(MaidLetterRule::cooldown),
                     Preset.CODEC.optionalFieldOf("preset").forGetter(MaidLetterRule::preset),
-                    AI.CODEC.optionalFieldOf("ai").forGetter(MaidLetterRule::ai)
+                    AI.CODEC.optionalFieldOf("ai").forGetter(MaidLetterRule::ai),
+                    Codec.STRING.listOf()
+                            .optionalFieldOf("maid_id")
+                            .xmap(
+                                    opt -> opt.map(list -> list.stream().map(ResourceLocation::new).toList()),
+                                    opt -> opt.map(list -> list.stream().map(ResourceLocation::toString).toList())
+                            )
+                            .forGetter(MaidLetterRule::maidIds)
             ).apply(instance, MaidLetterRule::new)
     );
 

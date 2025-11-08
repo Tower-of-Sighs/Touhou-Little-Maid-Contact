@@ -22,12 +22,14 @@ public class LetterRule implements ILetterRule {
     private final TriggerType triggerType;
     private final Integer cooldown;
     private final ILetterGenerator generator;
+    private final List<ResourceLocation> requiredMaidIds;
 
     private static final ITriggerManager TRIGGER_MANAGER = TriggerManager.getInstance();
 
     public LetterRule(String id, int minAffection, Integer maxAffection,
                       List<ResourceLocation> triggers, TriggerType triggerType,
-                      Integer cooldown, ILetterGenerator generator) {
+                      Integer cooldown, ILetterGenerator generator,
+                      List<ResourceLocation> requiredMaidIds) {
         this.id = id;
         this.minAffection = minAffection;
         this.maxAffection = maxAffection;
@@ -35,6 +37,7 @@ public class LetterRule implements ILetterRule {
         this.triggerType = triggerType;
         this.cooldown = cooldown;
         this.generator = generator;
+        this.requiredMaidIds = requiredMaidIds;
     }
 
     @Override
@@ -70,11 +73,23 @@ public class LetterRule implements ILetterRule {
     @Override
     public boolean matches(ServerPlayer owner, EntityMaid maid, long gameTime) {
         int affection = maid.getFavorability();
-
         if (affection < minAffection) return false;
         if (maxAffection != null && affection > maxAffection) return false;
 
+        if (requiredMaidIds != null && !requiredMaidIds.isEmpty()) {
+            String modelIdStr = maid.getModelId();
+            ResourceLocation maidModel = !modelIdStr.isEmpty()
+                    ? new ResourceLocation(modelIdStr) : null;
+            if (maidModel == null || !requiredMaidIds.contains(maidModel)) {
+                return false;
+            }
+        }
         return hasAnyTrigger(owner);
+    }
+
+    @Override
+    public List<ResourceLocation> getRequiredMaidIds() {
+        return requiredMaidIds;
     }
 
     @Override
@@ -94,23 +109,55 @@ public class LetterRule implements ILetterRule {
         }
 
         for (ResourceLocation triggerId : triggers) {
-            // 检查成就触发器
+            // 成就：只看事件激活
             Advancement advancement = server.getAdvancements().getAdvancement(triggerId);
             if (advancement != null) {
-                boolean done = owner.getAdvancements().getOrStartProgress(advancement).isDone();
-                if (done) return true;
+                if (TRIGGER_MANAGER.hasTriggered(owner, triggerId)) {
+                    return true;
+                }
+                continue;
             }
 
-            // 检查自定义触发器
-            boolean hasCustomTrigger;
-            if (triggerType == TriggerType.ONCE) {
-                hasCustomTrigger = TRIGGER_MANAGER.consumeTriggered(owner, triggerId);
-            } else {
-                hasCustomTrigger = TRIGGER_MANAGER.hasTriggered(owner, triggerId);
+            // 自定义触发器
+            boolean active = TRIGGER_MANAGER.hasTriggered(owner, triggerId);
+            if (active) {
+                ResourceLocation consumeKey = new ResourceLocation(
+                        "internal",
+                        ("custom_" + id + "_" + triggerId.toString().replace(":", "_"))
+                );
+                if (triggerType == TriggerType.ONCE) {
+                    if (TRIGGER_MANAGER.hasConsumedOnce(owner, consumeKey)) {
+                        continue;
+                    }
+                }
+                return true;
             }
-
-            if (hasCustomTrigger) return true;
         }
         return false;
+    }
+
+    public void consumeTriggers(ServerPlayer owner) {
+        MinecraftServer server = owner.getServer();
+
+        for (ResourceLocation triggerId : triggers) {
+            Advancement advancement = server != null ? server.getAdvancements().getAdvancement(triggerId) : null;
+            if (advancement != null) {
+                TRIGGER_MANAGER.clearTriggered(owner, triggerId);
+                continue;
+            }
+
+            if (TRIGGER_MANAGER.hasTriggered(owner, triggerId)) {
+                if (triggerType == TriggerType.ONCE) {
+                    ResourceLocation consumeKey = new ResourceLocation(
+                            "internal",
+                            ("custom_" + id + "_" + triggerId.toString().replace(":", "_"))
+                    );
+                    TRIGGER_MANAGER.markConsumedOnce(owner, consumeKey);
+                    TRIGGER_MANAGER.clearTriggered(owner, triggerId);
+                } else {
+                    TRIGGER_MANAGER.clearTriggered(owner, triggerId);
+                }
+            }
+        }
     }
 }

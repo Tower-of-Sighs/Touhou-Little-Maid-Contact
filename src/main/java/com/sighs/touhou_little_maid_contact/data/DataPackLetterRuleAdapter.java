@@ -65,11 +65,26 @@ public class DataPackLetterRuleAdapter implements ILetterRule {
     @Override
     public boolean matches(ServerPlayer owner, EntityMaid maid, long gameTime) {
         int affection = maid.getFavorability();
-
         if (affection < getMinAffection()) return false;
         if (getMaxAffection() != null && affection > getMaxAffection()) return false;
 
+        List<ResourceLocation> required = getRequiredMaidIds();
+        if (required != null && !required.isEmpty()) {
+            String modelIdStr = maid.getModelId();
+            ResourceLocation maidModel = !modelIdStr.isEmpty()
+                    ? new ResourceLocation(modelIdStr) : null;
+            if (maidModel == null || !required.contains(maidModel)) {
+                return false;
+            }
+        }
+
         return hasAnyTrigger(owner);
+    }
+
+
+    @Override
+    public List<ResourceLocation> getRequiredMaidIds() {
+        return dataPackRule.maidIds().orElse(null);
     }
 
     @Override
@@ -112,30 +127,59 @@ public class DataPackLetterRuleAdapter implements ILetterRule {
         }
     }
 
+
     private boolean hasAnyTrigger(ServerPlayer owner) {
         MinecraftServer server = owner.getServer();
         if (server == null) {
             return false;
         }
-
         for (ResourceLocation triggerId : getTriggers()) {
-            // 检查成就触发器
             Advancement advancement = server.getAdvancements().getAdvancement(triggerId);
             if (advancement != null) {
-                boolean done = owner.getAdvancements().getOrStartProgress(advancement).isDone();
-                if (done) return true;
+                if (TRIGGER_MANAGER.hasTriggered(owner, triggerId)) {
+                    return true;
+                }
+                continue;
             }
-
-            // 检查自定义触发器
-            boolean hasCustomTrigger;
-            if (getTriggerType() == TriggerType.ONCE) {
-                hasCustomTrigger = TRIGGER_MANAGER.consumeTriggered(owner, triggerId);
-            } else {
-                hasCustomTrigger = TRIGGER_MANAGER.hasTriggered(owner, triggerId);
+            boolean active = TRIGGER_MANAGER.hasTriggered(owner, triggerId);
+            if (active) {
+                ResourceLocation consumeKey = new ResourceLocation(
+                        "internal",
+                        ("custom_" + getId() + "_" + triggerId.toString().replace(":", "_"))
+                );
+                if (getTriggerType() == TriggerType.ONCE) {
+                    if (TRIGGER_MANAGER.hasConsumedOnce(owner, consumeKey)) {
+                        continue;
+                    }
+                }
+                return true;
             }
-
-            if (hasCustomTrigger) return true;
         }
         return false;
+    }
+
+    public void consumeTriggers(ServerPlayer owner) {
+        MinecraftServer server = owner.getServer();
+
+        for (ResourceLocation triggerId : getTriggers()) {
+            Advancement advancement = server != null ? server.getAdvancements().getAdvancement(triggerId) : null;
+            if (advancement != null) {
+                TRIGGER_MANAGER.clearTriggered(owner, triggerId);
+                continue;
+            }
+
+            if (TRIGGER_MANAGER.hasTriggered(owner, triggerId)) {
+                if (getTriggerType() == TriggerType.ONCE) {
+                    ResourceLocation consumeKey = new ResourceLocation(
+                            "internal",
+                            ("custom_" + getId() + "_" + triggerId.toString().replace(":", "_"))
+                    );
+                    TRIGGER_MANAGER.markConsumedOnce(owner, consumeKey);
+                    TRIGGER_MANAGER.clearTriggered(owner, triggerId);
+                } else {
+                    TRIGGER_MANAGER.clearTriggered(owner, triggerId);
+                }
+            }
+        }
     }
 }

@@ -18,6 +18,7 @@ public class LetterRuleBuilder implements ILetterRuleBuilder {
     private ILetterRule.TriggerType triggerType = ILetterRule.TriggerType.ONCE;
     private Integer cooldown = null;
     private ILetterGenerator generator;
+    private final List<ResourceLocation> requiredModelIds =  new ArrayList<>();
 
     @Override
     public ILetterRuleBuilder id(String id) {
@@ -70,6 +71,20 @@ public class LetterRuleBuilder implements ILetterRuleBuilder {
     }
 
     @Override
+    public ILetterRuleBuilder maidId(String maidId) {
+        this.requiredModelIds.add(new ResourceLocation(maidId));
+        return this;
+    }
+
+    @Override
+    public ILetterRuleBuilder maidIds(List<String> maidIds) {
+        for (String id : maidIds) {
+            this.requiredModelIds.add(new ResourceLocation(id));
+        }
+        return this;
+    }
+
+    @Override
     public ILetterRule build() {
         if (id == null) {
             throw new IllegalStateException("Letter rule ID must be set");
@@ -81,7 +96,7 @@ public class LetterRuleBuilder implements ILetterRuleBuilder {
             throw new IllegalStateException("At least one trigger must be set");
         }
 
-        return new LetterRule(id, minAffection, maxAffection, triggers, triggerType, cooldown, generator);
+        return new LetterRule(id, minAffection, maxAffection, triggers, triggerType, cooldown, generator, requiredModelIds);
     }
 
     /**

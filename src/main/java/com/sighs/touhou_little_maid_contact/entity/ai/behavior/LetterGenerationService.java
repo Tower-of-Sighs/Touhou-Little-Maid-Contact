@@ -6,18 +6,26 @@ import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.github.tartaricacid.touhoulittlemaid.util.ItemsUtil;
 import com.mojang.logging.LogUtils;
 import com.sighs.touhou_little_maid_contact.api.letter.ILetterRule;
+import com.sighs.touhou_little_maid_contact.api.trigger.ITriggerManager;
+import com.sighs.touhou_little_maid_contact.data.DataPackLetterRuleAdapter;
+import com.sighs.touhou_little_maid_contact.data.LetterRule;
 import com.sighs.touhou_little_maid_contact.data.LetterRuleRegistry;
+import com.sighs.touhou_little_maid_contact.trigger.TriggerManager;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.fml.loading.FMLLoader;
 import org.slf4j.Logger;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public final class LetterGenerationService {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static TaskDataKey<CompoundTag> RUNTIME_DATA_KEY;
+    private static final ITriggerManager TRIGGER_MANAGER = TriggerManager.getInstance();
 
     private LetterGenerationService() {
     }
@@ -37,6 +45,8 @@ public final class LetterGenerationService {
             logCooldownInfo(maid, serverLevel, owner);
         }
 
+        pruneUnmatchedTriggers(owner, maid);
+
         List<ILetterRule> candidates = LetterRuleRegistry.getMatchingRules(owner, maid, serverLevel.getGameTime());
         for (ILetterRule rule : candidates) {
             if (isOnCooldown(maid, rule, serverLevel.getGameTime())) continue;
@@ -50,6 +60,12 @@ public final class LetterGenerationService {
                 if (success) {
                     ItemsUtil.giveItemToMaid(maid, result);
                     setCooldown(maid, rule, serverLevel.getGameTime(), rule.getCooldown());
+
+                    if (rule instanceof LetterRule letterRule) {
+                        letterRule.consumeTriggers(owner);
+                    } else if (rule instanceof DataPackLetterRuleAdapter adapter) {
+                        adapter.consumeTriggers(owner);
+                    }
                 } else {
                     LOGGER.warn("[MaidMail] Letter generation failed maidId={} rule={} type={}",
                             maid.getId(), rule.getId(), rule.getType());
@@ -61,6 +77,81 @@ public final class LetterGenerationService {
             });
             break;
         }
+    }
+
+    /**
+     * 按触发器ID清理：如果某触发器当前没有任何规则在本帧可匹配，则清除它
+     * 规则“可匹配”仅检查非触发条件，不包含冷却与触发是否激活
+     */
+    private static void pruneUnmatchedTriggers(ServerPlayer owner, EntityMaid maid) {
+        var allRules = LetterRuleRegistry.getAllRules();
+
+        // 收集当前激活的所有触发器ID
+        Set<ResourceLocation> activeTriggers = new HashSet<>();
+        for (ILetterRule rule : allRules) {
+            for (ResourceLocation tid : rule.getTriggers()) {
+                if (TRIGGER_MANAGER.hasTriggered(owner, tid)) {
+                    activeTriggers.add(tid);
+                }
+            }
+        }
+        if (activeTriggers.isEmpty()) return;
+
+        // 对每个激活的触发器，判断是否存在任一规则在本帧可匹配
+        for (ResourceLocation tid : activeTriggers) {
+            boolean useBySomeMatchingRule = false;
+            for (ILetterRule rule : allRules) {
+                // 该规则是否包含该触发器
+                boolean ruleContainsTrigger = false;
+                for (ResourceLocation rtid : rule.getTriggers()) {
+                    if (rtid.equals(tid)) {
+                        ruleContainsTrigger = true;
+                        break;
+                    }
+                }
+                if (!ruleContainsTrigger) continue;
+
+                // 仅检查规则的静态条件，不依赖当前触发是否激活
+                if (staticConstraintsSatisfied(rule, maid)) {
+                    useBySomeMatchingRule = true;
+                    break;
+                }
+            }
+
+            // 如果该触发器当前没有任何可匹配规则，则清除它
+            if (!useBySomeMatchingRule) {
+                TRIGGER_MANAGER.clearTriggered(owner, tid);
+            }
+        }
+    }
+
+    /**
+     * 检查规则的静态匹配条件，不依赖触发器状态
+     */
+    private static boolean staticConstraintsSatisfied(ILetterRule rule, EntityMaid maid) {
+        int affection = maid.getFavorability();
+        Integer max = rule.getMaxAffection();
+        if (affection < rule.getMinAffection()) return false;
+        if (max != null && affection > max) return false;
+
+        List<ResourceLocation> requiredIds = null;
+
+        // 动态规则
+        if (rule instanceof LetterRule lr) {
+            requiredIds = lr.getRequiredMaidIds();
+        }
+        // 数据包规则
+        else if (rule instanceof DataPackLetterRuleAdapter adp) {
+            requiredIds = adp.getRequiredMaidIds();
+        }
+
+        if (requiredIds != null && !requiredIds.isEmpty()) {
+            String modelIdStr = maid.getModelId();
+            ResourceLocation maidModel = !modelIdStr.isEmpty()
+                    ? new ResourceLocation(modelIdStr) : null;
+            return maidModel != null && requiredIds.contains(maidModel);
+        }
+        return true;
     }
 
     private static boolean hasLetter(EntityMaid maid) {

@@ -53,6 +53,15 @@ public class MaidLetterValidator implements DataValidator<MaidLetterRule> {
                 return ValidationResult.failure("Invalid trigger id: " + rl);
             }
         }
+
+        if (rule.maidIds().isPresent()) {
+            for (ResourceLocation rl : rule.maidIds().get()) {
+                if (rl.getNamespace().isBlank() || rl.getPath().isBlank()) {
+                    return ValidationResult.failure("Invalid model_id: " + rl);
+                }
+            }
+        }
+
         return ValidationResult.success();
     }
 }
