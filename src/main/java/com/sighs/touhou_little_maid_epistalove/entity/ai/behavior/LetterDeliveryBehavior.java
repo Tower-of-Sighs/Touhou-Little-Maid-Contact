@@ -4,7 +4,7 @@ import com.flechazo.contact.common.item.IPackageItem;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.github.tartaricacid.touhoulittlemaid.util.ItemsUtil;
 import com.mojang.logging.LogUtils;
-import com.sighs.touhou_little_maid_epistalove.config.Config;
+import com.sighs.touhou_little_maid_epistalove.config.ModConfig;
 import com.sighs.touhou_little_maid_epistalove.util.HazardUtil;
 import com.sighs.touhou_little_maid_epistalove.util.MailboxSafetyEvaluator;
 import com.sighs.touhou_little_maid_epistalove.util.PathSafetyPlanner;
@@ -161,7 +161,7 @@ public class LetterDeliveryBehavior implements BehaviorControl<EntityMaid> {
         int homeRadius = Math.max(4, (int) maid.getRestrictRadius());
         boolean ownerInHome = owner != null && maid.closerThan(owner, homeRadius);
 
-        var bestMailboxOpt = MailboxSafetyEvaluator.getBestUsableMailbox(level, homeCenter, Math.min(Config.MAILBOX_SEARCH_RADIUS.get(), homeRadius));
+        var bestMailboxOpt = MailboxSafetyEvaluator.getBestUsableMailbox(level, homeCenter, Math.min(ModConfig.get().mailDelivery.mailboxSearchRadius, homeRadius));
 
         if (ownerInHome) {
             if (bestMailboxOpt.isPresent()) {

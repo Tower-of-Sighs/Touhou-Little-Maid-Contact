@@ -76,7 +76,7 @@ public final class AdvancedMovement {
         }
 
         if (direction.y > 0.1) {
-            maid.setDeltaMovement(0, Math.min(0.3, maid.getStepHeight() + 0.1), 0);
+            maid.setDeltaMovement(0, Math.min(0.3, maid.maxUpStep() + 0.1), 0);
             return true;
         } else if (direction.y < -0.1) {
             BlockPos below = maid.blockPosition().below();
@@ -85,7 +85,7 @@ public final class AdvancedMovement {
                 return true;
             }
         } else {
-            double jumpHeight = Math.min(0.4, maid.getStepHeight() + 0.2);
+            double jumpHeight = Math.min(0.4, maid.maxUpStep() + 0.2);
             maid.setDeltaMovement(direction.x * 0.1, jumpHeight, direction.z * 0.1);
             return true;
         }

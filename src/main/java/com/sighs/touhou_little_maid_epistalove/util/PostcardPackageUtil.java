@@ -3,12 +3,12 @@ package com.sighs.touhou_little_maid_epistalove.util;
 import com.flechazo.contact.common.item.IPackageItem;
 import com.flechazo.contact.resourse.PostcardDataManager;
 import com.github.tartaricacid.touhoulittlemaid.util.ItemsUtil;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -103,7 +103,7 @@ public final class PostcardPackageUtil {
         if (parcelIdStr != null && !parcelIdStr.isBlank()) {
             try {
                 ResourceLocation candidate = new ResourceLocation(parcelIdStr);
-                Item item = ForgeRegistries.ITEMS.getValue(candidate);
+                Item item = BuiltInRegistries.ITEM.get(candidate);
                 if (item instanceof IPackageItem) {
                     return candidate;
                 }
@@ -136,12 +136,10 @@ public final class PostcardPackageUtil {
 
     public static List<ResourceLocation> getAllPackageItemIds() {
         List<ResourceLocation> ids = new ArrayList<>();
-        for (var item : ForgeRegistries.ITEMS) {
+        for (var item : BuiltInRegistries.ITEM) {
             if (item instanceof IPackageItem) {
-                ResourceLocation id = ForgeRegistries.ITEMS.getKey(item);
-                if (id != null) {
-                    ids.add(id);
-                }
+                ResourceLocation id = BuiltInRegistries.ITEM.getKey(item);
+                ids.add(id);
             }
         }
         return ids;
@@ -149,5 +147,15 @@ public final class PostcardPackageUtil {
 
     public static List<ResourceLocation> getAllPostcardIds() {
         return new ArrayList<>(PostcardDataManager.getPostcardIds());
+    }
+
+    public static ResourceLocation normalizePostcardId(ResourceLocation id) {
+        String path = id.getPath();
+
+        if (path.startsWith("postcards/")) {
+            return id;
+        }
+
+        return new ResourceLocation(id.getNamespace(), "postcards/" + path + ".json");
     }
 }

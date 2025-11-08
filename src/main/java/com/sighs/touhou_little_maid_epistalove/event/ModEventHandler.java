@@ -3,38 +3,35 @@ package com.sighs.touhou_little_maid_epistalove.event;
 import com.sighs.touhou_little_maid_epistalove.api.letter.ILetterRule;
 import com.sighs.touhou_little_maid_epistalove.data.LetterRuleRegistry;
 import com.sighs.touhou_little_maid_epistalove.trigger.TriggerManager;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.minecraft.advancements.Advancement;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.event.OnDatapackSyncEvent;
-import net.minecraftforge.event.entity.player.AdvancementEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.minecraft.server.network.ServerGamePacketListenerImpl;
 
-@Mod.EventBusSubscriber
 public class ModEventHandler {
-
-    @SubscribeEvent
-    public static void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
-        if (event.getEntity() instanceof ServerPlayer sp) {
-            TriggerManager.getInstance().clearAllTriggered(sp);
-        }
+    public static void init() {
+        ServerPlayConnectionEvents.DISCONNECT.register(ModEventHandler::onPlayerLogout);
+        ServerLifecycleEvents.SYNC_DATA_PACK_CONTENTS.register(ModEventHandler::onDatapackSync);
+        PlayerAdvancementEarnedCallback.PLAYER_ADVANCEMENT.register(ModEventHandler::onAdvancementEarned);
     }
 
-    @SubscribeEvent
-    public static void onAdvancementEarned(AdvancementEvent event) {
-        if (event.getEntity() instanceof ServerPlayer sp) {
-            TriggerManager.getInstance().markTriggered(sp, event.getAdvancement().getId());
-        }
+    public static void onPlayerLogout(ServerGamePacketListenerImpl handler, MinecraftServer server) {
+        TriggerManager.getInstance().clearAllTriggered(handler.player);
     }
 
-    @SubscribeEvent
-    public static void onDatapackSync(OnDatapackSyncEvent event) {
+    public static void onAdvancementEarned(ServerPlayer sp, Advancement advancement) {
+        TriggerManager.getInstance().markTriggered(sp, advancement.getId());
+    }
+
+    public static void onDatapackSync(ServerPlayer serverPlayer, boolean joined) {
         var rules = LetterRuleRegistry.getAllRules();
         var triggerManager = TriggerManager.getInstance();
-        var server = event.getPlayerList().getServer();
+        var server = serverPlayer.server;
 
-        for (ServerPlayer sp : event.getPlayerList().getPlayers()) {
+        for (ServerPlayer sp : server.getPlayerList().getPlayers()) {
             for (var rule : rules) {
                 if (rule.getTriggerType() != ILetterRule.TriggerType.REPEAT) continue;
 

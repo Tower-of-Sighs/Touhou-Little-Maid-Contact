@@ -1,15 +1,16 @@
 package com.sighs.touhou_little_maid_epistalove.entity.ai.behavior;
 
+import cn.sh1rocu.touhoulittlemaid.util.itemhandler.ItemHandlerHelper;
 import com.flechazo.contact.common.handler.MailboxManager;
 import com.flechazo.contact.common.item.IPackageItem;
 import com.flechazo.contact.common.item.PostcardItem;
 import com.flechazo.contact.common.storage.MailToBeSent;
-import com.flechazo.contact.forge.storage.ForgeMailboxDataProvider;
-import com.flechazo.contact.forge.storage.MailboxDataCapability;
+import com.flechazo.contact.fabric.capability.FabricMailboxDataProvider;
+import com.flechazo.contact.fabric.capability.MailboxDataComponent;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.github.tartaricacid.touhoulittlemaid.util.ItemsUtil;
 import com.mojang.logging.LogUtils;
-import com.sighs.touhou_little_maid_epistalove.config.Config;
+import com.sighs.touhou_little_maid_epistalove.config.ModConfig;
 import com.sighs.touhou_little_maid_epistalove.util.MailboxSafetyEvaluator;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
@@ -20,7 +21,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.items.ItemHandlerHelper;
 import org.slf4j.Logger;
 
 public final class LetterDeliveryService {
@@ -61,7 +61,7 @@ public final class LetterDeliveryService {
     private static boolean tryDeliverViaMailbox(EntityMaid maid, ServerLevel level, ServerPlayer owner,
                                                 ItemStack parcel, BlockPos homeCenter, int homeRadius) {
 
-        var mailboxOpt = MailboxSafetyEvaluator.getBestUsableMailbox(level, homeCenter, Math.min(Config.MAILBOX_SEARCH_RADIUS.get(), homeRadius));
+        var mailboxOpt = MailboxSafetyEvaluator.getBestUsableMailbox(level, homeCenter, Math.min(ModConfig.get().mailDelivery.mailboxSearchRadius, homeRadius));
 
         if (mailboxOpt.isPresent()) {
             BlockPos pos = mailboxOpt.get().pos();
@@ -101,36 +101,40 @@ public final class LetterDeliveryService {
 
     private static boolean sendViaPostbox(ServerLevel level, ServerPlayer owner, ItemStack parcel,
                                           BlockPos postboxPos, EntityMaid maid) {
-        return level.getCapability(MailboxDataCapability.MAILBOX_DATA).map(provider -> {
-            ForgeMailboxDataProvider dataProvider = new ForgeMailboxDataProvider(provider);
-            GlobalPos from = GlobalPos.of(level.dimension(), postboxPos);
-            GlobalPos to = dataProvider.getMailboxPos(owner.getUUID());
+        MailboxDataComponent component = MailboxDataComponent.KEY.get(level);
+        FabricMailboxDataProvider dataProvider = new FabricMailboxDataProvider(component.getData());
 
-            ItemStack parcelCopy = parcel.copy();
-            CompoundTag tag = parcelCopy.getOrCreateTag();
+        GlobalPos from = GlobalPos.of(level.dimension(), postboxPos);
+        GlobalPos to = dataProvider.getMailboxPos(owner.getUUID());
 
-            String senderName = maid.getName().getString();
-            tag.putString("Sender", senderName);
+        ItemStack parcelCopy = parcel.copy();
+        CompoundTag tag = parcelCopy.getOrCreateTag();
 
-            if (IPackageItem.checkAndPostmarkPostcard(parcelCopy, senderName) ||
-                    parcelCopy.getItem() instanceof PostcardItem) {
+        String senderName = maid.getName().getString();
+        tag.putString("Sender", senderName);
+
+        if (IPackageItem.checkAndPostmarkPostcard(parcelCopy, senderName)
+                || parcelCopy.getItem() instanceof PostcardItem) {
+        }
+
+        if (to != null) {
+            if (!to.dimension().equals(level.dimension())) {
+                tag.putBoolean("AnotherWorld", true);
             }
-
-            if (to != null) {
-                if (to.dimension() != level.dimension()) {
-                    tag.putBoolean("AnotherWorld", true);
-                }
-            } else {
-                if (Level.OVERWORLD != level.dimension()) {
-                    tag.putBoolean("AnotherWorld", true);
-                }
+        } else {
+            if (!Level.OVERWORLD.equals(level.dimension())) {
+                tag.putBoolean("AnotherWorld", true);
             }
+        }
 
-            int ticks = (to != null) ? MailboxManager.getDeliveryTicks(from, to) : 0;
-            dataProvider.getMailList().add(new MailToBeSent(owner.getUUID(), parcelCopy, ticks));
-            return true;
-        }).orElse(false);
+        int ticks = (to != null) ? MailboxManager.getDeliveryTicks(from, to) : 0;
+        dataProvider.getMailList().add(new MailToBeSent(owner.getUUID(), parcelCopy, ticks));
+
+        MailboxDataComponent.KEY.sync(level);
+
+        return true;
     }
+
 
     private static boolean hasLetter(EntityMaid maid) {
         return ItemsUtil.isStackIn(maid, stack -> {

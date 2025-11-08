@@ -1,14 +1,14 @@
 package com.sighs.touhou_little_maid_epistalove.util;
 
 import com.mojang.logging.LogUtils;
-import com.sighs.touhou_little_maid_epistalove.config.Config;
+import com.sighs.touhou_little_maid_epistalove.config.ModConfig;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.pathfinder.BlockPathTypes;
-import net.minecraftforge.registries.ForgeRegistries;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
@@ -25,11 +25,11 @@ public final class MailboxSafetyEvaluator {
     public record MailboxInfo(BlockPos pos, int safetyScore, double distance, boolean accessible,
                               BlockPathTypes pathType) {
         public boolean isUsable() {
-            return safetyScore >= Config.MAILBOX_MIN_SAFETY_SCORE.get() && accessible && !HazardUtil.isPathTypeDangerous(pathType);
+            return safetyScore >= ModConfig.get().safetyEvaluation.mailboxMinSafetyScore && accessible && !HazardUtil.isPathTypeDangerous(pathType);
         }
 
         public boolean isHighQuality() {
-            return safetyScore >= Config.HIGH_QUALITY_THRESHOLD.get() && accessible && pathType == BlockPathTypes.WALKABLE;
+            return safetyScore >= ModConfig.get().safetyEvaluation.highQualityThreshold && accessible && pathType == BlockPathTypes.WALKABLE;
         }
     }
 
@@ -43,7 +43,7 @@ public final class MailboxSafetyEvaluator {
 
     public static List<MailboxInfo> evaluateMailboxes(ServerLevel level, BlockPos center, int searchRadius) {
         List<MailboxInfo> mailboxes = new ArrayList<>();
-        int r = Math.max(1, Math.min(searchRadius, Config.MAILBOX_SEARCH_RADIUS.get()));
+        int r = Math.max(1, Math.min(searchRadius, ModConfig.get().mailDelivery.mailboxSearchRadius));
 
         for (BlockPos pos : BlockPos.betweenClosed(
                 center.offset(-r, -2, -r),
@@ -67,8 +67,7 @@ public final class MailboxSafetyEvaluator {
 
     private static boolean isMailbox(ServerLevel level, BlockPos pos) {
         var state = level.getBlockState(pos);
-        ResourceLocation id = ForgeRegistries.BLOCKS.getKey(state.getBlock());
-        if (id == null) return false;
+        ResourceLocation id = BuiltInRegistries.BLOCK.getKey(state.getBlock());
         if (!"contact".equals(id.getNamespace())) return false;
 
         String path = id.getPath();

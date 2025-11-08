@@ -3,9 +3,9 @@ package com.sighs.touhou_little_maid_epistalove.data;
 import com.flechazo.contact.common.item.IPackageItem;
 import com.flechazo.contact.resourse.PostcardDataManager;
 import com.mafuyu404.oelib.api.data.DataValidator;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
-import net.minecraftforge.registries.ForgeRegistries;
 
 public class MaidLetterValidator implements DataValidator<MaidLetterRule> {
     @Override
@@ -29,10 +29,7 @@ public class MaidLetterValidator implements DataValidator<MaidLetterRule> {
                 return ValidationResult.failure("gifts must be size 1");
             }
             MaidLetterRule.Gift gift = p.gifts().get(0);
-            Item item = ForgeRegistries.ITEMS.getValue(gift.parcel());
-            if (item == null) {
-                return ValidationResult.failure("Parcel item not found: " + gift.parcel());
-            }
+            Item item = BuiltInRegistries.ITEM.get(gift.parcel());
             if (!(item instanceof IPackageItem)) {
                 return ValidationResult.failure("Parcel item must implement IPackageItem: " + gift.parcel());
             }

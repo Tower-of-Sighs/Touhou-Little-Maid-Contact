@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "id": "${mod_id}",
+  "version": "${mod_version}",
+  "name": "${mod_name}",
+  "description": "${mod_description}",
+  "authors": [
+    "Flechazo"
+  ],
+  "contact": {},
+  "license": "${mod_license}",
+  "environment": "*",
+  "entrypoints": {
+    "client": [
+      "com.sighs.touhou_little_maid_epistalove.client.TLMEpistaloveClient"
+    ],
+    "main": [
+      "com.sighs.touhou_little_maid_epistalove.TLMEpistalove"
+    ],
+    "modmenu": [
+      "com.sighs.touhou_little_maid_epistalove.config.ModMenuCompat"
+    ],
+    "cardinal-components-entity": [
+      "com.sighs.touhou_little_maid_epistalove.init.ModComponents"
+    ],
+    "little_maid_extension": [
+      "com.sighs.touhou_little_maid_epistalove.TLMEpistaloveEx"
+    ]
+  },
+  "mixins": [
+    "touhou_little_maid_epistalove.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": "*",
+    "fabric": "*",
+    "minecraft": "${minecraft_version}",
+    "contact": ">=1.2.2",
+    "touhou_little_maid": "*"
+  },
+  "custom": {
+    "cardinal-components": [
+      "touhou_little_maid_epistalove:maidmail_consumed"
+    ]
+  }
+}

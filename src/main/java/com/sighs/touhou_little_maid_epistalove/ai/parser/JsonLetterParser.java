@@ -5,7 +5,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mojang.logging.LogUtils;
 import com.sighs.touhou_little_maid_epistalove.ai.prompt.IPromptBuilder;
-import com.sighs.touhou_little_maid_epistalove.config.AILetterConfig;
+import com.sighs.touhou_little_maid_epistalove.config.ModConfig;
 import com.sighs.touhou_little_maid_epistalove.util.PostcardPackageUtil;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
@@ -38,7 +38,7 @@ public class JsonLetterParser implements ILetterParser {
             String message = obj.has("message") ? obj.get("message").getAsString() : "";
 
             // 验证内容质量，避免过于简单或重复的内容
-            if (AILetterConfig.ENABLE_QUALITY_FILTER.get() && !isContentValid(title, message)) {
+            if (ModConfig.get().aiLetterConfig.enableQualityFilter && !isContentValid(title, message)) {
                 LOGGER.warn("[MaidMail][AI] Content quality check failed: title='{}', message='{}'", title, message);
                 return ItemStack.EMPTY;
             }
@@ -67,7 +67,7 @@ public class JsonLetterParser implements ILetterParser {
         if (title == null || title.trim().isEmpty() || title.length() < 2) {
             return false;
         }
-        int minLength = AILetterConfig.MIN_CONTENT_LENGTH.get();
+        int minLength = ModConfig.get().aiLetterConfig.minContentLength;
         if (message == null || message.trim().isEmpty() || message.length() < minLength) {
             return false;
         }
@@ -86,7 +86,7 @@ public class JsonLetterParser implements ILetterParser {
         }
 
         // 如果通用词汇过多，认为内容质量不高
-        int maxGenericPhrases = AILetterConfig.MAX_GENERIC_PHRASES.get();
+        int maxGenericPhrases = ModConfig.get().aiLetterConfig.maxGenericPhrases;
         return genericCount <= maxGenericPhrases;
     }
 }

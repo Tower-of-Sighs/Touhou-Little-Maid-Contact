@@ -2,7 +2,7 @@ package com.sighs.touhou_little_maid_epistalove.ai.prompt;
 
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.mojang.logging.LogUtils;
-import com.sighs.touhou_little_maid_epistalove.config.AILetterConfig;
+import com.sighs.touhou_little_maid_epistalove.config.ModConfig;
 import com.sighs.touhou_little_maid_epistalove.util.PostcardPackageUtil;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -69,7 +69,7 @@ public class EnhancedPromptBuilder implements IPromptBuilder {
         String parcelsList = allParcels.stream().map(ResourceLocation::toString).collect(Collectors.joining(", "));
 
         // 生成动态上下文信息
-        String contextInfo = AILetterConfig.ENABLE_CONTEXT_ENRICHMENT.get() ?
+        String contextInfo = ModConfig.get().aiLetterConfig.enableContextEnrichment ?
                 generateContextInfo(maid, owner) : "当前环境：普通";
         String expressionTechnique = getRandomExpressionTechnique();
         String creativityBoost = generateCreativityBoost();
@@ -115,7 +115,7 @@ public class EnhancedPromptBuilder implements IPromptBuilder {
         Queue<String> recentContent = RECENT_CONTENT_MEMORY.computeIfAbsent(maidId, k -> new LinkedList<>());
 
         recentContent.offer(contentSummary);
-        int maxMemorySize = AILetterConfig.MEMORY_SIZE.get();
+        int maxMemorySize = ModConfig.get().aiLetterConfig.memorySize;
         if (recentContent.size() > maxMemorySize) {
             recentContent.poll(); // 移除最旧的记录
         }

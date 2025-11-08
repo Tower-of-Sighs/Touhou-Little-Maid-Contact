@@ -1,9 +1,9 @@
 package com.sighs.touhou_little_maid_epistalove.command;
 
-import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
 import com.sighs.touhou_little_maid_epistalove.TLMEpistalove;
 import com.sighs.touhou_little_maid_epistalove.trigger.TriggerManager;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
@@ -12,13 +12,15 @@ import net.minecraft.server.level.ServerPlayer;
 
 public class MaidLetterCommand {
 
-    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
-        dispatcher.register(Commands.literal("maidletter")
-                .then(Commands.literal("trigger")
-                        .then(Commands.literal("first_gift")
-                                .requires(source -> source.hasPermission(4))
-                                .executes(MaidLetterCommand::executeFirstGift)))
-        );
+    public static void register() {
+        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
+            dispatcher.register(Commands.literal("maidletter")
+                    .then(Commands.literal("trigger")
+                            .then(Commands.literal("first_gift")
+                                    .requires(source -> source.hasPermission(4))
+                                    .executes(MaidLetterCommand::executeFirstGift)))
+            );
+        });
     }
 
     private static int executeFirstGift(CommandContext<CommandSourceStack> context) {

@@ -12,7 +12,7 @@ import com.mojang.logging.LogUtils;
 import com.sighs.touhou_little_maid_epistalove.ai.parser.ILetterParser;
 import com.sighs.touhou_little_maid_epistalove.ai.prompt.IPromptBuilder;
 import com.sighs.touhou_little_maid_epistalove.api.letter.ILetterGenerator;
-import com.sighs.touhou_little_maid_epistalove.config.AILetterConfig;
+import com.sighs.touhou_little_maid_epistalove.config.ModConfig;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import org.slf4j.Logger;
@@ -92,7 +92,7 @@ public class AILetterGenerator implements ILetterGenerator {
     }
 
     private LLMConfig createEnhancedLLMConfig(String model, EntityMaid maid) {
-        double temperatureBoost = AILetterConfig.CREATIVITY_TEMPERATURE_BOOST.get();
+        double temperatureBoost = ModConfig.get().aiLetterConfig.creativityTemperatureBoost;
         double enhancedTemperature = Math.min(1.2, AIConfig.LLM_TEMPERATURE.get() + temperatureBoost);
 
         int enhancedMaxTokens = Math.max(AIConfig.LLM_MAX_TOKEN.get(), 200);

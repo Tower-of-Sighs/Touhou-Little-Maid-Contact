@@ -49,7 +49,7 @@ public interface ITriggerManager {
     /**
      * 标记一次性触发器为已消费（持久化，跨会话）
      *
-     * @param player 玩家
+     * @param player     玩家
      * @param triggerKey 用于唯一标识
      */
     void markConsumedOnce(ServerPlayer player, ResourceLocation triggerKey);
@@ -57,7 +57,7 @@ public interface ITriggerManager {
     /**
      * 查询一次性触发器是否已消费（持久化）
      *
-     * @param player 玩家
+     * @param player     玩家
      * @param triggerKey 用于唯一标识
      * @return 是否已消费
      */
@@ -66,7 +66,7 @@ public interface ITriggerManager {
     /**
      * 清除一次性触发器的消费记录（持久化）
      *
-     * @param player 玩家
+     * @param player     玩家
      * @param triggerKey 用于唯一标识
      */
     void clearConsumedOnce(ServerPlayer player, ResourceLocation triggerKey);

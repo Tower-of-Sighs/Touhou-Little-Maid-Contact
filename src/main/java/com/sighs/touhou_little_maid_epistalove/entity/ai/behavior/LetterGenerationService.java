@@ -11,11 +11,11 @@ import com.sighs.touhou_little_maid_epistalove.data.DataPackLetterRuleAdapter;
 import com.sighs.touhou_little_maid_epistalove.data.LetterRule;
 import com.sighs.touhou_little_maid_epistalove.data.LetterRuleRegistry;
 import com.sighs.touhou_little_maid_epistalove.trigger.TriggerManager;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.fml.loading.FMLLoader;
 import org.slf4j.Logger;
 
 import java.util.HashSet;
@@ -41,7 +41,7 @@ public final class LetterGenerationService {
         if (maid.tickCount % 10 != 0) return;
         if (hasLetter(maid)) return;
 
-        if (maid.tickCount % 200 == 0 && !FMLLoader.isProduction()) {
+        if (maid.tickCount % 200 == 0 && FabricLoader.getInstance().isDevelopmentEnvironment()) {
             logCooldownInfo(maid, serverLevel, owner);
         }
 
@@ -167,7 +167,7 @@ public final class LetterGenerationService {
         List<ILetterRule> rules = LetterRuleRegistry.getMatchingRules(owner, maid, serverLevel.getGameTime());
         for (ILetterRule rule : rules) {
             int remain = getCooldownRemaining(maid, rule, serverLevel.getGameTime());
-            if (remain > 0 && !FMLLoader.isProduction()) {
+            if (remain > 0 && FabricLoader.getInstance().isDevelopmentEnvironment()) {
                 LOGGER.debug("[MaidMail] cooldown maidId={} rule={} remaining={}",
                         maid.getId(), rule.getId(), remain);
             }

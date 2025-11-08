@@ -1,6 +1,6 @@
 package com.sighs.touhou_little_maid_epistalove.util;
 
-import com.sighs.touhou_little_maid_epistalove.config.Config;
+import com.sighs.touhou_little_maid_epistalove.config.ModConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Mob;
@@ -249,7 +249,7 @@ public final class PathSafetyPlanner {
 
         int safetyPercentage = (totalSafe * 100) / totalChecked;
 
-        if (maxConsecutiveDangerous > Config.MAX_CONSECUTIVE_DANGEROUS.get()) {
+        if (maxConsecutiveDangerous > ModConfig.get().pathfinding.maxConsecutiveDangerous) {
             return false;
         }
 
@@ -262,6 +262,6 @@ public final class PathSafetyPlanner {
         }
 
         boolean hasGoodSafeSegment = maxConsecutiveSafe >= Math.max(3, totalChecked / 5);
-        return safetyPercentage >= Config.PATH_SAFETY_PERCENTAGE.get() && hasGoodSafeSegment;
+        return safetyPercentage >= ModConfig.get().pathfinding.pathSafetyPercentage && hasGoodSafeSegment;
     }
 }

@@ -1,7 +1,6 @@
 package com.sighs.touhou_little_maid_epistalove;
 
 import com.github.tartaricacid.touhoulittlemaid.api.ILittleMaid;
-import com.github.tartaricacid.touhoulittlemaid.api.LittleMaidExtension;
 import com.github.tartaricacid.touhoulittlemaid.api.entity.data.TaskDataKey;
 import com.github.tartaricacid.touhoulittlemaid.entity.ai.brain.ExtraMaidBrainManager;
 import com.github.tartaricacid.touhoulittlemaid.entity.data.TaskDataRegister;
@@ -10,7 +9,6 @@ import com.sighs.touhou_little_maid_epistalove.entity.ai.behavior.LetterGenerati
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 
-@LittleMaidExtension
 public class TLMEpistaloveEx implements ILittleMaid {
 
     @Override

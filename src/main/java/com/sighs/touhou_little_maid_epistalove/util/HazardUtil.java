@@ -1,7 +1,8 @@
 package com.sighs.touhou_little_maid_epistalove.util;
 
-import com.sighs.touhou_little_maid_epistalove.config.Config;
+import com.sighs.touhou_little_maid_epistalove.config.ModConfig;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.level.BlockGetter;
@@ -85,8 +86,8 @@ public final class HazardUtil {
         var state = level.getBlockState(pos);
         var block = state.getBlock();
 
-        var blockId = net.minecraftforge.registries.ForgeRegistries.BLOCKS.getKey(block);
-        if (blockId != null && "contact".equals(blockId.getNamespace())) {
+        var blockId = BuiltInRegistries.BLOCK.getKey(block);
+        if ("contact".equals(blockId.getNamespace())) {
             String path = blockId.getPath();
             return "red_postbox".equals(path) || "green_postbox".equals(path);
         }
@@ -137,7 +138,7 @@ public final class HazardUtil {
      */
     public static boolean isAreaTooHazardous(ServerLevel level, BlockPos center, int radius) {
         int hazardScore = calculateHazardScore(level, center, radius);
-        return hazardScore > Config.AREA_HAZARD_THRESHOLD.get();
+        return hazardScore > ModConfig.get().safetyEvaluation.areaHazardThreshold;
     }
 
     /**

@@ -18,7 +18,7 @@ public class LetterRuleBuilder implements ILetterRuleBuilder {
     private ILetterRule.TriggerType triggerType = ILetterRule.TriggerType.ONCE;
     private Integer cooldown = null;
     private ILetterGenerator generator;
-    private final List<ResourceLocation> requiredModelIds =  new ArrayList<>();
+    private final List<ResourceLocation> requiredModelIds = new ArrayList<>();
 
     @Override
     public ILetterRuleBuilder id(String id) {

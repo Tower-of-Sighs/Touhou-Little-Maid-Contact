@@ -30,16 +30,17 @@ public class PresetLetterGenerator implements ILetterGenerator {
     @Override
     public void generate(ServerPlayer owner, EntityMaid maid, Consumer<ItemStack> callback) {
         try {
-            // 验证明信片ID是否存在
-            if (!PostcardDataManager.getPostcardIds().contains(postcardId)) {
-                LOGGER.error("[MaidMail] postcard not exists id={}", postcardId);
+            ResourceLocation normalized = PostcardPackageUtil.normalizePostcardId(postcardId);
+
+            if (!PostcardDataManager.getPostcardIds().contains(normalized)) {
+                LOGGER.error("[MaidMail] postcard not exists id={} (normalized as {})", postcardId, normalized);
                 callback.accept(ItemStack.EMPTY);
                 return;
             }
 
             String senderName = maid.getName().getString();
             ItemStack letter = PostcardPackageUtil.buildPackageWithPostcard(
-                    parcelId, title + "\n" + message, postcardId, senderName);
+                    parcelId, title + "\n" + message, normalized, senderName);
 
             callback.accept(letter);
         } catch (Exception e) {
