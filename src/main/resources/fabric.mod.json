@@ -35,7 +35,8 @@
     "fabric": "*",
     "minecraft": "${minecraft_version}",
     "contact": ">=1.2.2",
-    "touhou_little_maid": "*"
+    "touhou_little_maid": "*",
+    "cloth-config2": "*"
   },
   "custom": {
     "cardinal-components": [
