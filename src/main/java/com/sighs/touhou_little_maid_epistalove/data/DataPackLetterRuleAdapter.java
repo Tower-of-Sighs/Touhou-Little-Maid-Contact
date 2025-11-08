@@ -63,6 +63,16 @@ public class DataPackLetterRuleAdapter implements ILetterRule {
     }
 
     @Override
+    public Integer getFavorabilityChange() {
+        return dataPackRule.favorabilityChange().orElse(null);
+    }
+
+    @Override
+    public Integer getFavorabilityThreshold() {
+        return dataPackRule.favorabilityThreshold().orElse(null);
+    }
+
+    @Override
     public boolean matches(ServerPlayer owner, EntityMaid maid, long gameTime) {
         int affection = maid.getFavorability();
         if (affection < getMinAffection()) return false;

@@ -21,6 +21,8 @@ public class LetterRule implements ILetterRule {
     private final List<ResourceLocation> triggers;
     private final TriggerType triggerType;
     private final Integer cooldown;
+    private final Integer favorabilityChange;
+    private final Integer favorabilityThreshold;
     private final ILetterGenerator generator;
     private final List<ResourceLocation> requiredMaidIds;
 
@@ -28,7 +30,9 @@ public class LetterRule implements ILetterRule {
 
     public LetterRule(String id, int minAffection, Integer maxAffection,
                       List<ResourceLocation> triggers, TriggerType triggerType,
-                      Integer cooldown, ILetterGenerator generator,
+                      Integer cooldown,
+                      Integer favorabilityChange, Integer favorabilityThreshold,
+                      ILetterGenerator generator,
                       List<ResourceLocation> requiredMaidIds) {
         this.id = id;
         this.minAffection = minAffection;
@@ -36,6 +40,8 @@ public class LetterRule implements ILetterRule {
         this.triggers = triggers;
         this.triggerType = triggerType;
         this.cooldown = cooldown;
+        this.favorabilityChange = favorabilityChange;
+        this.favorabilityThreshold = favorabilityThreshold;
         this.generator = generator;
         this.requiredMaidIds = requiredMaidIds;
     }
@@ -68,6 +74,16 @@ public class LetterRule implements ILetterRule {
     @Override
     public Integer getCooldown() {
         return cooldown;
+    }
+
+    @Override
+    public Integer getFavorabilityChange() {
+        return favorabilityChange;
+    }
+
+    @Override
+    public Integer getFavorabilityThreshold() {
+        return favorabilityThreshold;
     }
 
     @Override

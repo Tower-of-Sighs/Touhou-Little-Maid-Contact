@@ -8,7 +8,6 @@ import com.sighs.touhou_little_maid_epistalove.data.LetterRuleRegistry;
 import com.sighs.touhou_little_maid_epistalove.data.MaidLetterRule;
 import com.sighs.touhou_little_maid_epistalove.event.ModEventHandler;
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.loader.api.FabricLoader;
 import org.slf4j.Logger;
 
 public class TLMEpistalove implements ModInitializer {
@@ -22,12 +21,6 @@ public class TLMEpistalove implements ModInitializer {
         ModEventHandler.init();
         DataRegistry.register(MaidLetterRule.class);
         LetterRuleRegistry.init();
-        registerCommand();
-    }
-
-    private static void registerCommand() {
-        if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
-            MaidLetterCommand.register();
-        }
+        MaidLetterCommand.register();
     }
 }
