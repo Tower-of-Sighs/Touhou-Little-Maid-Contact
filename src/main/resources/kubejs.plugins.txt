@@ -1,1 +1,1 @@
-com.sighs.touhou_little_maid_contact.integration.kjs.KJSLetterPlugin
+com.sighs.touhou_little_maid_epistalove.integration.kjs.KJSLetterPlugin

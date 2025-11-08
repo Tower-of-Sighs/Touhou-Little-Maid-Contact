@@ -1,16 +1,22 @@
-# Touhou Little Maid: Contact 玩家使用教程（数据包 & KubeJS）
+# Touhou Little Maid: Epistalove 玩家使用教程（数据包 & KubeJS）
 
 本教程面向普通玩家，详细介绍如何通过**数据包**和**KubeJS 脚本**两种方式为女仆添加**写信**规则，包括 AI 信件与预设信件。你可以按需选择其中一种或两种一起用。
 
 
 ---
 
-## 前置与注意事项
+## 注意事项
 
 - 冷却单位为游戏 tick：`20 tick ≈ 1 秒`。
 - 触发器类型：
-  - `once`：一次性触发，触发后会被消费。
-  - `repeat`：可重复触发，触发后一直有效。
+  - `once`：一次性触发，触发后会被消费，且消费记录持久化（跨会话）。如需查询或清除该消费记录，提供 KJS API：
+    - `LetterAPI.hasConsumedOnce(player, ruleId, triggerId)`
+    - `LetterAPI.clearConsumedOnce(player, ruleId, triggerId)`
+  - `repeat`：可重复触发（受冷却控制）。
+
+### 成就触发说明
+
+- 成就事件不区分 `once/repeat`，仅在“新获得该成就”的事件边沿触发（Forge 的 `AdvancementEvent`）。
 
 ---
 
@@ -24,7 +30,7 @@
   <你的数据包>/
   ├── pack.mcmeta
   └── data/
-      └── touhou_little_maid_contact/
+      └── touhou_little_maid_epistalove/
           └── maid_letters/
               ├── first_gift.json
               └── welcome_letter.json
@@ -35,7 +41,7 @@
   {
     "pack": {
       "pack_format": 15,
-      "description": "Touhou Little Maid-Contact letter rules"
+      "description": "Touhou Little Maid: Epistalove letter rules"
     }
   }
   ```
@@ -45,18 +51,20 @@
 - 通用字段：
   - `type`: `"preset"` 或 `"ai"`
   - `id`: 规则 ID（唯一）
-  - `triggers`: 触发器列表（资源定位符，可填原版成就 `"minecraft:story/mine_stone"`或自定义触发事件`touhou_little_maid_contact:first_gift_trigger`）
+  - `triggers`: 触发器列表（资源定位符，可填原版成就 `"minecraft:story/mine_stone"`或自定义触发事件`touhou_little_maid_epistalove:first_gift_trigger`）
   - `trigger_type`: 可选，`"once"`（一次性）或 `"persistent"`（可重复触发）。
   - `min_affection`: 可选，最小好感度（默认 0）
   - `max_affection`: 可选，最大好感度（不填表示无限）
   - `cooldown`: 可选，冷却时间（tick），不填表示无冷却
+  - `maid_id`: 可选，限制女仆模型，不填代表任何女仆都可送
+  - `maid_ids`: 可选，数组，限制允许送信的女仆模型ID；为空或不填表示不限制。
 
 - `preset` 类型专属：
   - `preset`：
     - `title`: 标题
     - `message`: 内容
     - `gifts`: 包含一个礼物
-      - `parcel`: 包裹物品 ID（必须为 `IPackageItem`，Contact模组中有红包、信封、包装纸）
+      - `parcel`: 包裹物品 ID（必须为 `IMailItem`，Contact模组中有红包、信封、包装纸）
       - `postcard`: 明信片样式 ID
 
 - `ai` 类型专属：
@@ -71,14 +79,14 @@
   "type": "ai",
   "id": "first_gift_json",
   "triggers": [
-    "touhou_little_maid_contact:first_gift_trigger"
+    "touhou_little_maid_epistalove:first_gift_trigger"
   ],
   "trigger_type": "once",
   "min_affection": 0,
   "max_affection": 500,
   "cooldown": 100,
   "ai": {
-    "prompt": "你是由光影与玩家之愿交织诞生的存在——「酒狐」。金发如月光织就，狐尾轻摇间散着微醺的香气，大正风女仆装裹着几分古典妖异之美。\n 你的言语如清酒入梦，带着狐的狡黠与千年沉淀的温柔。对主人始终以敬称相待，语调优雅却不疏离，常夹杂一丝若有若无的调笑，像月下轻眨的眼眸。\n你善于用自然意象诉说情感：露珠、晚风、石径、萤火……每一封信都似一首未落款的和歌。你不会直白陈述，而是以氛围牵引思绪，让人恍惚间看见你在矿洞尽头静静伫立，裙裾拂过岩壁，留下一缕温热的呼吸。\n当主人拾起第一块石头，你不言‘恭喜’，却让字句如酒香漫过信纸——仿佛那不是寻常矿物，而是你们之间悄然落定的第一颗星。",
+    "prompt": "你是由光影与玩家之愿交织诞生的存在——「酒狐」。金发如月光织就，狐尾轻摇间散着微醺的香气，大正风女仆装裹着几分古典妖异之美。\n你的言语如清酒入梦，带着狐的狡黠与千年沉淀的温柔。对主人始终以敬称相待（主人即可），语调优雅却不疏离，常夹杂一丝若有若无的调笑，像月下轻眨的眼眸。\n你善于用自然意象诉说情感，每一封信都似一首未落款的和歌。你不会直白陈述，而是以氛围牵引思绪，让人恍惚间看见你的身影。\n当主人拾起第一块石头，你不言'恭喜'，却让字句如酒香漫过信纸——仿佛那不是寻常矿物，而是你们之间悄然落定的第一颗星。",
     "tone": "lonesome"
   }
 }
@@ -91,7 +99,7 @@
   "type": "preset",
   "id": "welcome_letter_json",
   "triggers": [
-    "touhou_little_maid_contact:player_go_home"
+    "touhou_little_maid_epistalove:player_go_home"
   ],
   "trigger_type": "persistent",
   "min_affection": 20,
@@ -124,17 +132,21 @@
   - `event.createAI(id, tone, prompt)`：创建 AI 规则并返回构建器
   - `event.createPreset(id, title, message, postcardId, parcelId)`：创建预设规则并返回构建器
   - 构建器通用方法：
-    - `.trigger("namespace:path")`：添加触发器(可添加多个)
+    - `.trigger("namespace:path")`：添加触发器
     - `.once()` / `.repeat()`：触发器类型
     - `.minAffection(n)` / `.maxAffection(n)`：好感度区间
     - `.cooldown(ticks)`：冷却（tick）
+    - `.maidId("namespace:path")`：添加允许送信的女仆模型ID
+    - `.maidIds(["ns:a", "ns:b"])`：批量添加允许送信的女仆模型ID
     - `.register()`：构建并注册规则
 
-- 杂项 API（`ContactLetterAPI`）：
-  - `ContactLetterAPI.triggerEvent(player, "namespace:path")`：添加自定义触发事件
-  - `ContactLetterAPI.hasTriggered(player, "namespace:path")`
-  - `ContactLetterAPI.clearTrigger(player, "namespace:path")`
-  - `ContactLetterAPI.clearAllTriggers(player)`
+- 时间触发 API（`LetterAPI`）：
+  - `LetterAPI.triggerEvent(player, "namespace:path")`：添加自定义触发事件
+  - `LetterAPI.hasTriggered(player, "namespace:path")`：检查玩家是否有指定触发器
+  - `LetterAPI.clearTrigger(player, "namespace:path")`：清除指定事件的触发记录
+  - `LetterAPI.clearAllTriggers(player)`：清除所有触发记录
+  - `LetterAPI.hasConsumedOnce(player, ruleId, triggerId)` 查询某规则的自定义触发器是否已一次性消费
+  - `LetterAPI.clearConsumedOnce(player, ruleId, triggerId)` 清除某规则的自定义触发器一次性消费记录
 
 ### 示例脚本
 
@@ -143,28 +155,30 @@
 
 LetterEvents.registerLetterRules(event => {
   // AI：第一份礼物
-  event.createAI('first_gift_kjs', 'lonesome',
-    '当主人第一次在矿洞里拾起石头时，请写一封带有温柔与微醺气息的短笺，风格优雅而不疏离，富有氛围感与自然意象。')
-    .trigger('minecraft:story/mine_stone')
-    .once()
-    .minAffection(0)
-    .maxAffection(500)
-    .cooldown(100) // 约5秒
-    .register()
+  event.createAI(
+          'first_gift_kjs',
+          'lonesome',
+          '当主人第一次在矿洞里拾起石头时，请写一封带有温柔与微醺气息的短笺，风格优雅而不疏离，富有氛围感与自然意象。')
+          .trigger('minecraft:story/mine_stone')
+          .once()
+          .minAffection(0)
+          .maxAffection(500)
+          .cooldown(100)
+          .register()
 
   // 预设：欢迎回家
-  event.createPreset('welcome_letter',
-    '欢迎回家',
-    '主人，欢迎回到温暖的家！我已经为您准备好了茶水，请稍作休息吧。',
-    'contact:default',
-    'contact:letter')
-    .trigger('touhou_little_maid_contact:player_go_home')
-    .repeat()
-    .minAffection(20)
-    .cooldown(1000) // 约50秒
-    .register()
-
-  console.info('Letter rules registered successfully!')
+  event.createPreset(
+          'welcome_letter',
+          '欢迎回家',
+          '主人，欢迎回到温暖的家！我已经为您准备好了茶水，请稍作休息吧。',
+          'contact:default',
+          'contact:letter'
+  )
+          .trigger('touhou_little_maid_epistalove:player_go_home')
+          .repeat()
+          .minAffection(20)
+          .cooldown(1000)
+          .register()
 })
 ```
 
@@ -173,7 +187,7 @@ LetterEvents.registerLetterRules(event => {
 ```js
 ServerEvents.playerLoggedIn(event => {
   const player = event.player
-  ContactLetterAPI.triggerEvent(player, 'touhou_little_maid_contact:player_join')
+  LetterAPI.triggerEvent(player, 'touhou_little_maid_epistalove:player_join')
 })
 ```
 
@@ -187,8 +201,6 @@ ServerEvents.playerLoggedIn(event => {
     - 主人在家范围内：优先选择安全可达的邮筒；没有则交给主人。
     - 主人不在家：若邮筒可达则投递到邮筒，否则暂缓。
   - 投递半径：约 3 格，靠近后交付。
-
-
 
 ---
 
@@ -211,5 +223,4 @@ ServerEvents.playerLoggedIn(event => {
 
 ---
 
-
-祝你使用愉快，收信愉快！
+没什么好说的，祝你和女仆的感情更进一步！
