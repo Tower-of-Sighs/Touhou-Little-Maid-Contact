@@ -5,6 +5,8 @@ import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import net.minecraft.network.chat.Component;
 
+import java.util.ArrayList;
+
 public final class EpistaloveClothConfigScreen {
     private EpistaloveClothConfigScreen() {
     }
@@ -135,6 +137,50 @@ public final class EpistaloveClothConfigScreen {
                 .setDefaultValue(Config.DEFAULT_MAX_CONSECUTIVE_DANGEROUS)
                 .setTooltip(Component.translatable("config.touhou_little_maid_epistalove.pathfinding.max_consecutive_dangerous.tooltip"))
                 .setSaveConsumer(Config.MAX_CONSECUTIVE_DANGEROUS::set)
+                .build());
+
+
+        // 关键提示词集合
+        aiLetter.addEntry(entry.startStrList(
+                        Component.translatable("config.touhou_little_maid_epistalove.ai_letter.expression_techniques"),
+                        new ArrayList<>(AILetterConfig.EXPRESSION_TECHNIQUES.get()))
+                .setTooltip(Component.translatable("config.touhou_little_maid_epistalove.ai_letter.expression_techniques.tooltip"))
+                .setSaveConsumer(AILetterConfig.EXPRESSION_TECHNIQUES::set)
+                .build());
+
+        aiLetter.addEntry(entry.startStrList(
+                        Component.translatable("config.touhou_little_maid_epistalove.ai_letter.context_templates"),
+                        new ArrayList<>(AILetterConfig.CONTEXT_TEMPLATES.get()))
+                .setTooltip(Component.translatable("config.touhou_little_maid_epistalove.ai_letter.context_templates.tooltip"))
+                .setSaveConsumer(AILetterConfig.CONTEXT_TEMPLATES::set)
+                .build());
+
+        aiLetter.addEntry(entry.startStrList(
+                        Component.translatable("config.touhou_little_maid_epistalove.ai_letter.time_descriptions"),
+                        new ArrayList<>(AILetterConfig.TIME_DESCRIPTIONS.get()))
+                .setTooltip(Component.translatable("config.touhou_little_maid_epistalove.ai_letter.time_descriptions.tooltip"))
+                .setSaveConsumer(AILetterConfig.TIME_DESCRIPTIONS::set)
+                .build());
+
+        aiLetter.addEntry(entry.startStrList(
+                        Component.translatable("config.touhou_little_maid_epistalove.ai_letter.weather_descriptions"),
+                        new ArrayList<>(AILetterConfig.WEATHER_DESCRIPTIONS.get()))
+                .setTooltip(Component.translatable("config.touhou_little_maid_epistalove.ai_letter.weather_descriptions.tooltip"))
+                .setSaveConsumer(AILetterConfig.WEATHER_DESCRIPTIONS::set)
+                .build());
+
+        aiLetter.addEntry(entry.startStrList(
+                        Component.translatable("config.touhou_little_maid_epistalove.ai_letter.emotional_states"),
+                        new ArrayList<>(AILetterConfig.EMOTIONAL_STATES.get()))
+                .setTooltip(Component.translatable("config.touhou_little_maid_epistalove.ai_letter.emotional_states.tooltip"))
+                .setSaveConsumer(AILetterConfig.EMOTIONAL_STATES::set)
+                .build());
+
+        aiLetter.addEntry(entry.startStrList(
+                        Component.translatable("config.touhou_little_maid_epistalove.ai_letter.creativity_tips"),
+                        new ArrayList<>(AILetterConfig.CREATIVITY_TIPS.get()))
+                .setTooltip(Component.translatable("config.touhou_little_maid_epistalove.ai_letter.creativity_tips.tooltip"))
+                .setSaveConsumer(AILetterConfig.CREATIVITY_TIPS::set)
                 .build());
 
         return root;

@@ -1,6 +1,6 @@
 package com.sighs.touhou_little_maid_epistalove;
 
-import com.mafuyu404.oelib.forge.data.DataRegistry;
+import com.mafuyu404.oelib.data.DataRegistry;
 import com.mojang.logging.LogUtils;
 import com.sighs.touhou_little_maid_epistalove.command.MaidLetterCommand;
 import com.sighs.touhou_little_maid_epistalove.config.Config;
@@ -10,7 +10,6 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.loading.FMLLoader;
 import org.slf4j.Logger;
 
 @Mod(TLMEpistalove.MODID)
@@ -21,7 +20,7 @@ public class TLMEpistalove {
     public TLMEpistalove() {
         Config.register();
 
-        DataRegistry.register(MaidLetterRule.class);
+        DataRegistry.register(MaidLetterRule.class, MaidLetterRule.CODEC);
 
         LetterRuleRegistry.init();
 
