@@ -47,10 +47,6 @@ public class EnhancedPromptBuilder implements IPromptBuilder {
             "伴随着%s的心情，"
     );
 
-    // 时间描述
-    private static final List<String> TIME_DESCRIPTIONS = List.of(
-            "清晨", "午后", "黄昏", "夜晚", "深夜", "黎明", "正午", "傍晚"
-    );
 
     // 天气/环境描述
     private static final List<String> WEATHER_DESCRIPTIONS = List.of(
@@ -133,11 +129,12 @@ public class EnhancedPromptBuilder implements IPromptBuilder {
     private String generateContextInfo(EntityMaid maid, ServerPlayer owner) {
         StringBuilder context = new StringBuilder();
 
-        LocalDateTime now = LocalDateTime.now();
-        String timeDesc = randomPick(getConfiguredOrDefault(AILetterConfig.TIME_DESCRIPTIONS.get(), TIME_DESCRIPTIONS));
-        context.append("时间：").append(timeDesc).append("（").append(now.format(DateTimeFormatter.ofPattern("HH:mm"))).append("）\n");
-
         if (maid.level() instanceof ServerLevel level) {
+            LocalDateTime now = getMinecraftDateTime(level);
+            String timeDesc = getTimeDescription(now);
+            context.append("时间：").append(timeDesc).append("（").append(now.format(DateTimeFormatter.ofPattern("HH:mm"))).append("）\n");
+
+
             try {
                 Biome biome = level.getBiome(maid.blockPosition()).value();
                 ResourceLocation biomeId = level.registryAccess()
@@ -153,18 +150,39 @@ public class EnhancedPromptBuilder implements IPromptBuilder {
             } catch (Exception e) {
                 context.append("环境：未知区域\n");
             }
+
+            int affection = maid.getFavorability();
+            String affectionDesc = affection > 80 ? "非常亲密" : affection > 60 ? "亲密" : affection > 40 ? "友好" : "普通";
+            context.append("关系：").append(affectionDesc).append("（好感度").append(affection).append("）\n");
+
+            String weatherPhrase = computeWeatherPhrase(maid);
+            String emotion = randomPick(getConfiguredOrDefault(AILetterConfig.EMOTIONAL_STATES.get(), EMOTIONAL_STATES));
+            String template = randomPick(getConfiguredOrDefault(AILetterConfig.CONTEXT_TEMPLATES.get(), CONTEXT_TEMPLATES));
+            context.append("氛围：").append(String.format(template, weatherPhrase, emotion));
         }
-
-        int affection = maid.getFavorability();
-        String affectionDesc = affection > 80 ? "非常亲密" : affection > 60 ? "亲密" : affection > 40 ? "友好" : "普通";
-        context.append("关系：").append(affectionDesc).append("（好感度").append(affection).append("）\n");
-
-        String weather = randomPick(getConfiguredOrDefault(AILetterConfig.WEATHER_DESCRIPTIONS.get(), WEATHER_DESCRIPTIONS));
-        String emotion = randomPick(getConfiguredOrDefault(AILetterConfig.EMOTIONAL_STATES.get(), EMOTIONAL_STATES));
-        String template = randomPick(getConfiguredOrDefault(AILetterConfig.CONTEXT_TEMPLATES.get(), CONTEXT_TEMPLATES));
-        context.append("氛围：").append(String.format(template, weather, emotion));
-
         return context.toString();
+    }
+
+    private String getTimeDescription(LocalDateTime dateTime) {
+        int hour = dateTime.getHour();
+
+        if (hour <= 4) return "深夜";
+
+        else if (hour <= 6) return "黎明";
+
+        else if (hour <= 9) return "清晨";
+
+        else if (hour <= 11) return "上午";
+
+        else if (hour <= 13) return "正午";
+
+        else if (hour <= 16) return "午后";
+
+        else if (hour <= 18) return "傍晚";
+
+        else if (hour <= 20) return "黄昏";
+
+        else return "夜晚";
     }
 
     private String getRandomExpressionTechnique() {
@@ -216,4 +234,113 @@ public class EnhancedPromptBuilder implements IPromptBuilder {
 
         return constraints.toString();
     }
+
+    private enum WeatherCategory {
+        THUNDER, RAIN, SNOW, CLOUDY, CLEAR, UNKNOWN
+    }
+
+    private WeatherCategory computeWeatherCategory(EntityMaid maid) {
+        if (!(maid.level() instanceof ServerLevel level)) {
+            return WeatherCategory.UNKNOWN;
+        }
+        var pos = maid.blockPosition();
+        Biome biome = level.getBiome(pos).value();
+
+        if (level.isThundering()) {
+            return WeatherCategory.THUNDER;
+        }
+        boolean rainingHere = level.isRainingAt(pos);
+        if (rainingHere) {
+            if (biome.getPrecipitationAt(pos) == Biome.Precipitation.SNOW || biome.coldEnoughToSnow(pos)) {
+                return WeatherCategory.SNOW;
+            }
+            return WeatherCategory.RAIN;
+        }
+        if (level.isRaining()) {
+            if (biome.getPrecipitationAt(pos) == Biome.Precipitation.SNOW) {
+                return WeatherCategory.SNOW;
+            } else if (biome.getPrecipitationAt(pos) == Biome.Precipitation.RAIN) {
+                return WeatherCategory.CLOUDY;
+            } else {
+                return WeatherCategory.CLOUDY;
+            }
+        }
+        return WeatherCategory.CLEAR;
+    }
+
+    // 根据类别+昼夜，从配置中筛选意象词并随机组合
+    private String computeWeatherPhrase(EntityMaid maid) {
+        WeatherCategory category = computeWeatherCategory(maid);
+        boolean night = false;
+        if (maid.level() instanceof ServerLevel level) {
+            night = level.isNight();
+
+        }
+        List<String> configured = getConfiguredOrDefault(AILetterConfig.WEATHER_DESCRIPTIONS.get(), WEATHER_DESCRIPTIONS);
+        List<String> filtered = new ArrayList<>();
+
+        for (String w : configured) {
+            switch (category) {
+                case THUNDER -> {
+                    if (containsAny(w, "雷", "云", "风", "雨")) filtered.add(w);
+                }
+                case RAIN -> {
+                    if (containsAny(w, "雨", "露", "云", "风")) filtered.add(w);
+                }
+                case SNOW -> {
+                    if (containsAny(w, "雪", "霜", "云", "风")) filtered.add(w);
+                }
+                case CLOUDY -> {
+                    if (containsAny(w, "云", "风", "露")) filtered.add(w);
+                }
+                case CLEAR -> {
+                    if (night) {
+                        if (containsAny(w, "月", "星", "风", "露", "云")) filtered.add(w);
+                    } else {
+                        if (containsAny(w, "阳", "风", "云", "露")) filtered.add(w);
+                    }
+                }
+                default -> {
+                    if (containsAny(w, "风", "云", "露", "阳", "月", "星", "雨", "雪")) filtered.add(w);
+                }
+            }
+        }
+
+        List<String> picks = randomPickMany(filtered.isEmpty() ? configured : filtered, 2);
+        if (picks.isEmpty()) {
+            return night ? "月光与微风" : "阳光与微风";
+        }
+        if (picks.size() == 1) {
+            return picks.get(0);
+        }
+        return picks.get(0) + "与" + picks.get(1);
+
+    }
+
+    private boolean containsAny(String s, String... keys) {
+        for (String k : keys) {
+            if (s.contains(k)) return true;
+        }
+        return false;
+    }
+
+    private List<String> randomPickMany(List<String> list, int count) {
+        if (list == null || list.isEmpty() || count <= 0) {
+            return List.of();
+        }
+        List<String> copy = new ArrayList<>(list);
+        Collections.shuffle(copy, new Random());
+        int n = Math.min(count, copy.size());
+        return copy.subList(0, n);
+    }
+
+    private LocalDateTime getMinecraftDateTime(ServerLevel level) {
+        long dayTime = level.getDayTime() % 24000;
+
+        int hour = (int) ((dayTime / 1000 + 6) % 24);
+        int minute = (int) ((dayTime % 1000) * 60 / 1000);
+
+        return LocalDateTime.of(2024, 1, 1, hour, minute);
+    }
+
 }
