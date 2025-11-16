@@ -127,15 +127,12 @@ public class EnhancedPromptBuilder implements IPromptBuilder {
     }
 
     private String generateContextInfo(EntityMaid maid, ServerPlayer owner) {
-        Random random = new Random();
         StringBuilder context = new StringBuilder();
 
-        // 时间信息
         LocalDateTime now = LocalDateTime.now();
-        String timeDesc = TIME_DESCRIPTIONS.get(random.nextInt(TIME_DESCRIPTIONS.size()));
+        String timeDesc = randomPick(getConfiguredOrDefault(AILetterConfig.TIME_DESCRIPTIONS.get(), TIME_DESCRIPTIONS));
         context.append("时间：").append(timeDesc).append("（").append(now.format(DateTimeFormatter.ofPattern("HH:mm"))).append("）\n");
 
-        // 环境信息
         if (maid.level() instanceof ServerLevel level) {
             try {
                 Biome biome = level.getBiome(maid.blockPosition()).value();
@@ -146,28 +143,24 @@ public class EnhancedPromptBuilder implements IPromptBuilder {
             }
         }
 
-        // 女仆状态
         int affection = maid.getFavorability();
         String affectionDesc = affection > 80 ? "非常亲密" : affection > 60 ? "亲密" : affection > 40 ? "友好" : "普通";
         context.append("关系：").append(affectionDesc).append("（好感度").append(affection).append("）\n");
 
-        // 随机情境描述
-        String weather = WEATHER_DESCRIPTIONS.get(random.nextInt(WEATHER_DESCRIPTIONS.size()));
-        String emotion = EMOTIONAL_STATES.get(random.nextInt(EMOTIONAL_STATES.size()));
-        String contextTemplate = CONTEXT_TEMPLATES.get(random.nextInt(CONTEXT_TEMPLATES.size()));
-        context.append("氛围：").append(String.format(contextTemplate, weather, emotion));
+        String weather = randomPick(getConfiguredOrDefault(AILetterConfig.WEATHER_DESCRIPTIONS.get(), WEATHER_DESCRIPTIONS));
+        String emotion = randomPick(getConfiguredOrDefault(AILetterConfig.EMOTIONAL_STATES.get(), EMOTIONAL_STATES));
+        String template = randomPick(getConfiguredOrDefault(AILetterConfig.CONTEXT_TEMPLATES.get(), CONTEXT_TEMPLATES));
+        context.append("氛围：").append(String.format(template, weather, emotion));
 
         return context.toString();
     }
 
     private String getRandomExpressionTechnique() {
-        Random random = new Random();
-        return EXPRESSION_TECHNIQUES.get(random.nextInt(EXPRESSION_TECHNIQUES.size()));
+        return randomPick(getConfiguredOrDefault(AILetterConfig.EXPRESSION_TECHNIQUES.get(), EXPRESSION_TECHNIQUES));
     }
 
     private String generateCreativityBoost() {
-        Random random = new Random();
-        List<String> creativityTips = List.of(
+        List<String> defaults = List.of(
                 "尝试使用比喻或拟人的手法",
                 "可以加入一些小细节，比如声音、气味、触感等",
                 "试着从不同的角度来描述同一件事",
@@ -177,8 +170,21 @@ public class EnhancedPromptBuilder implements IPromptBuilder {
                 "试着用对话或内心独白的形式",
                 "可以使用一些文学性的修辞手法"
         );
+        return randomPick(getConfiguredOrDefault(AILetterConfig.CREATIVITY_TIPS.get(), defaults));
+    }
 
-        return creativityTips.get(random.nextInt(creativityTips.size()));
+    private static <T> T randomPick(List<T> list) {
+        if (list == null || list.isEmpty()) {
+            return null;
+        }
+        Random random = new Random();
+        return list.get(random.nextInt(list.size()));
+    }
+
+    private static List<String> getConfiguredOrDefault(List<? extends String> configured, List<String> defaults) {
+        return (configured != null && !configured.isEmpty())
+                ? configured.stream().map(String::valueOf).collect(Collectors.toList())
+                : defaults;
     }
 
     private String generateMemoryConstraints(String maidId) {

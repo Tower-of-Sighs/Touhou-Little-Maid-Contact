@@ -2,6 +2,7 @@ package com.sighs.touhou_little_maid_epistalove.entity.ai.behavior;
 
 import com.flechazo.contact.common.item.IPackageItem;
 import com.github.tartaricacid.touhoulittlemaid.api.entity.data.TaskDataKey;
+import com.github.tartaricacid.touhoulittlemaid.entity.favorability.FavorabilityManager;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.github.tartaricacid.touhoulittlemaid.util.ItemsUtil;
 import com.mojang.logging.LogUtils;
@@ -61,6 +62,8 @@ public final class LetterGenerationService {
                 if (success) {
                     ItemsUtil.giveItemToMaid(maid, result);
                     setCooldown(maid, rule, serverLevel.getGameTime(), rule.getCooldown());
+
+                    applyFavorabilityChange(maid, rule);
 
                     if (rule instanceof LetterRule letterRule) {
                         letterRule.consumeTriggers(owner);
@@ -224,5 +227,39 @@ public final class LetterGenerationService {
         if (cd == null || cd <= 0 || last <= 0) return 0;
         long elapsed = nowTick - last;
         return Math.max(0, cd - (int) elapsed);
+    }
+
+    private static void applyFavorabilityChange(EntityMaid maid, ILetterRule rule) {
+        Integer delta = rule.getFavorabilityChange();
+        Integer threshold = rule.getFavorabilityThreshold();
+        int current = maid.getFavorability();
+
+        LOGGER.debug("[MaidMail] Favorability change start: maid={} rule={} delta={} threshold={} current={}",
+                maid.getName().getString(), rule.getId(), delta, threshold, current);
+
+        if (delta == null || delta == 0) {
+            LOGGER.debug("[MaidMail] Skip change: delta is null or zero");
+            return;
+        }
+
+        FavorabilityManager fm = maid.getFavorabilityManager();
+
+        if (delta > 0) {
+            if (threshold != null && current >= threshold) {
+                LOGGER.debug("[MaidMail] Skip add: current {} >= threshold {}", current, threshold);
+                return;
+            }
+            int target = threshold != null ? Math.min(current + delta, threshold) : current + delta;
+            fm.add(Math.max(0, target - current));
+        } else {
+            if (threshold != null && current <= threshold) {
+                LOGGER.debug("[MaidMail] Skip reduce: current {} <= threshold {}", current, threshold);
+                return;
+            }
+            int target = threshold != null ? Math.max(current + delta, threshold) : current + delta;
+            fm.reduceWithoutLevel(Math.max(0, current - target));
+        }
+
+        LOGGER.debug("[MaidMail] Favorability changed: before={} after={}", current, maid.getFavorability());
     }
 }

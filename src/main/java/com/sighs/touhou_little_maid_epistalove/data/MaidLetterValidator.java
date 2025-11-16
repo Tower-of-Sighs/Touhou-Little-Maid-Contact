@@ -59,6 +59,13 @@ public class MaidLetterValidator implements DataValidator<MaidLetterRule> {
             }
         }
 
+        if (rule.favorabilityThreshold().isPresent()) {
+            int thr = rule.favorabilityThreshold().get();
+            if (thr < 0) {
+                return ValidationResult.failure("favorability_threshold must be >= 0");
+            }
+        }
+
         return ValidationResult.success();
     }
 }

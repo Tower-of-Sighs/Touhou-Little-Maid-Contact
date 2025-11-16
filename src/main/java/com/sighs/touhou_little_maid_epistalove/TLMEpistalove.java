@@ -1,6 +1,6 @@
 package com.sighs.touhou_little_maid_epistalove;
 
-import com.mafuyu404.oelib.neoforge.data.DataRegistry;
+import com.mafuyu404.oelib.data.DataRegistry;
 import com.mojang.logging.LogUtils;
 import com.sighs.touhou_little_maid_epistalove.command.MaidLetterCommand;
 import com.sighs.touhou_little_maid_epistalove.component.TLMContactDataComponents;
@@ -26,8 +26,7 @@ public class TLMEpistalove {
 
         TLMContactDataComponents.DATA_COMPONENTS.register();
 
-        DataRegistry.register(MaidLetterRule.class);
-
+        DataRegistry.register(MaidLetterRule.class, MaidLetterRule.CODEC);
         LetterRuleRegistry.init();
 
         NeoForge.EVENT_BUS.register(this);

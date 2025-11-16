@@ -53,6 +53,9 @@ repositories {
         name = "Illusive Soulworks maven"
         url = "https://maven.theillusivec4.top/"
     }
+    maven {
+        url "https://maven.sighs.cc/repository/maven-releases/"
+    }
 }
 
 base {
@@ -146,6 +149,7 @@ dependencies {
     // KubeJS
     implementation "dev.latvian.mods:rhino:${rhino_version}"
     implementation "dev.latvian.mods:kubejs-neoforge:${kubejs_version}"
+    implementation "curse.maven:architectury-api-419699:5786327"
 
     // Sodium
     implementation "maven.modrinth:AANobbMI:Pb3OXVqC"
@@ -154,8 +158,8 @@ dependencies {
     implementation ("curse.maven:kiwi-303657:7082554")
 
     // OELib
-    implementation "curse.maven:oelib-1319210:6882494"
-    implementation "curse.maven:architectury-api-419699:5786327"
+    implementation 'com.mafuyu404.oelib:OELib-neoforge-1.21.1:0.0.6'
+    runtimeOnly 'com.mafuyu404.oelib:OELib-neoforge-1.21.1:0.0.6'
 
     // Contact
     implementation "curse.maven:contact-love-rekindled-1326820:7199383"
