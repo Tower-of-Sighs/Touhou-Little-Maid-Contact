@@ -7,6 +7,8 @@ LetterEvents.registerLetterRules(event => {
         .minAffection(0)
         .maxAffection(500)
         .cooldown(100)
+        .affectionChange(-100)
+        .affectionThreshold(0)
         .register()
 
     event.createPreset('welcome_letter',
@@ -25,6 +27,7 @@ LetterEvents.registerLetterRules(event => {
         .id('mining_achievement')
         .aiGenerator('cheerful', '主人今天挖到了很多矿物！请写一封充满活力的祝贺信件。')
         .trigger('minecraft:story/mine_stone')
+        .repeat()
         .minAffection(30)
         .cooldown(100)
         .register()

@@ -35,7 +35,11 @@ public class WriteLetterFunction implements IFunctionCall<WriteLetterFunction.Ar
 
     @Override
     public String getDescription(EntityMaid maid) {
-        return FUNCTION_DESC;
+        return FUNCTION_DESC + "\n"
+                + "Parameters:\n"
+                + "- prompt: required\n"
+                + "- tone: optional, omit to let the maid choose a suitable style based on dialogue\n"
+                + "- favorability_change: optional";
     }
 
     @Override
@@ -47,9 +51,10 @@ public class WriteLetterFunction implements IFunctionCall<WriteLetterFunction.Ar
                 .addEnumValues("sweet", "lonesome", "elegant", "gentle", "playful");
         Parameter favorabilityChange = StringParameter.create()
                 .setDescription("favorability_change (integer, optional): Positive to increase, negative to decrease");
-        root.addProperties("prompt", prompt);
-        root.addProperties("tone", tone);
-        root.addProperties("favorability_change", favorabilityChange);
+
+        root.addProperties("prompt", prompt, true);
+        root.addProperties("tone", tone, false);
+        root.addProperties("favorability_change", favorabilityChange, false);
         return root;
     }
 
@@ -92,7 +97,7 @@ public class WriteLetterFunction implements IFunctionCall<WriteLetterFunction.Ar
             return new ToolResponse("Failed to write letter: owner not found");
         }
 
-        String tone = args.tone().orElse("sweet");
+        String tone = args.tone().orElse(null);
         EnhancedPromptBuilder builder = new EnhancedPromptBuilder();
         JsonLetterParser parser = new JsonLetterParser(builder);
         AILetterGenerator generator = new AILetterGenerator(tone, args.prompt(), builder, parser);

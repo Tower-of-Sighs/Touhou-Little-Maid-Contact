@@ -13,6 +13,7 @@
     - `LetterAPI.hasConsumedOnce(player, ruleId, triggerId)`
     - `LetterAPI.clearConsumedOnce(player, ruleId, triggerId)`
   - `repeat`：可重复触发（受冷却控制）。
+- 指定女仆模型 ID 热重载后生效触发器会有延迟，表现如：`.maidId("geckolib:zhiban")` 但当前为酒狐，切换模型为纸板狐后第一次触发送信可能会有延迟，或者将`"geckolib:zhiban"`改为 `"geckolib:winefox_new_year"` 后第一次触发送信也可能会有延迟。
 
 ### 成就触发说明
 
@@ -51,11 +52,16 @@
 - 通用字段：
   - `type`: `"preset"` 或 `"ai"`
   - `id`: 规则 ID（唯一）
-  - `triggers`: 触发器列表（资源定位符，可填原版成就 `"minecraft:story/mine_stone"`或自定义触发事件`touhou_little_maid_epistalove:first_gift_trigger`）
+  - `triggers`: 触发器列表（资源定位符，可填原版成就 `"minecraft:story/mine_stone"`或自定义触发事件`"touhou_little_maid_epistalove:first_gift_trigger"`）
   - `trigger_type`: 可选，`"once"`（一次性）或 `"persistent"`（可重复触发）。
   - `min_affection`: 可选，最小好感度（默认 0）
   - `max_affection`: 可选，最大好感度（不填表示无限）
   - `cooldown`: 可选，冷却时间（tick），不填表示无冷却
+  - 送信后好感度变更（可选）：
+  - `favorability_change`：整数，正数表示每次送信提升好感度，负数表示降低好感度；不写表示不改变好感度。
+  - `favorability_threshold`：整数阈值；当好感度达到（对提升）或低于（对降低）该值时，不再继续变化；不写表示无阈值。
+    - 提升：当前好感度已达到或超过该阈值，则不再提升；否则最多提升到该阈值。
+    - 降低：当前好感度已达到或低于该阈值，则不再降低；否则最多降低到该阈值。
   - `maid_id`: 可选，限制女仆模型，不填代表任何女仆都可送
   - `maid_ids`: 可选，数组，限制允许送信的女仆模型ID；为空或不填表示不限制。
 
@@ -136,6 +142,8 @@
     - `.once()` / `.repeat()`：触发器类型
     - `.minAffection(n)` / `.maxAffection(n)`：好感度区间
     - `.cooldown(ticks)`：冷却（tick）
+    - `.affectionChange(delta)`：设置每次送信的好感度变化（正数升、负数降）。
+    - `.affectionThreshold(threshold)`：设置好感度变化的阈值（达到该值后不再继续变化）。
     - `.maidId("namespace:path")`：添加允许送信的女仆模型ID
     - `.maidIds(["ns:a", "ns:b"])`：批量添加允许送信的女仆模型ID
     - `.register()`：构建并注册规则
@@ -216,6 +224,8 @@ ServerEvents.playerLoggedIn(event => {
   - `postcard` 或 `parcel` ID 无效：检查数据包 JSON 的 ID 是否正确，是否存在对应的物品或样式。
   - `gifts` 数组长度错误：必须为 1，且仅一个礼物条目。
 
+- 与女仆聊天无法触发送信？
+  - 车万女仆 `Function Call 功能` 配置未启用。 
 
 - 邮筒投递不成功？
   - 邮筒是否在家范围内、可达且安全（模组会自动评估）。

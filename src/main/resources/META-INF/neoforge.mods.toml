@@ -25,5 +25,26 @@ versionRange = "${minecraft_version_range}"
 ordering = "NONE"
 side = "BOTH"
 
+[[dependencies."${mod_id}"]]
+modId = "contact"
+mandatory = true
+versionRange = "[1.2.1,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies."${mod_id}"]]
+modId = "touhou_little_maid"
+mandatory = true
+versionRange = "[1.0.0,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies."${mod_id}"]]
+modId = "oelib"
+mandatory = true
+versionRange = "[0.0.6,)"
+ordering = "NONE"
+side = "BOTH"
+
 [[accessTransformers]]
 file = "META-INF/accesstransformer.cfg"
