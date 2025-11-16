@@ -13,6 +13,7 @@
     - `LetterAPI.hasConsumedOnce(player, ruleId, triggerId)`
     - `LetterAPI.clearConsumedOnce(player, ruleId, triggerId)`
   - `repeat`：可重复触发（受冷却控制）。
+- 指定女仆模型 ID 热重载后生效触发器会有延迟，表现如：`.maidId("geckolib:zhiban")` 但当前为酒狐，切换模型为纸板狐后第一次触发送信可能会有延迟，或者将`"geckolib:zhiban"`改为 `"geckolib:winefox_new_year"` 后第一次触发送信也可能会有延迟。
 
 ### 成就触发说明
 
@@ -51,7 +52,7 @@
 - 通用字段：
   - `type`: `"preset"` 或 `"ai"`
   - `id`: 规则 ID（唯一）
-  - `triggers`: 触发器列表（资源定位符，可填原版成就 `"minecraft:story/mine_stone"`或自定义触发事件`touhou_little_maid_epistalove:first_gift_trigger`）
+  - `triggers`: 触发器列表（资源定位符，可填原版成就 `"minecraft:story/mine_stone"`或自定义触发事件`"touhou_little_maid_epistalove:first_gift_trigger"`）
   - `trigger_type`: 可选，`"once"`（一次性）或 `"persistent"`（可重复触发）。
   - `min_affection`: 可选，最小好感度（默认 0）
   - `max_affection`: 可选，最大好感度（不填表示无限）
@@ -163,29 +164,29 @@
 LetterEvents.registerLetterRules(event => {
   // AI：第一份礼物
   event.createAI(
-    'first_gift_kjs',
-    'lonesome',
-    '当主人第一次在矿洞里拾起石头时，请写一封带有温柔与微醺气息的短笺，风格优雅而不疏离，富有氛围感与自然意象。')
-    .trigger('minecraft:story/mine_stone')
-    .once()
-    .minAffection(0)
-    .maxAffection(500)
-    .cooldown(100)
-    .register()
+          'first_gift_kjs',
+          'lonesome',
+          '当主人第一次在矿洞里拾起石头时，请写一封带有温柔与微醺气息的短笺，风格优雅而不疏离，富有氛围感与自然意象。')
+          .trigger('minecraft:story/mine_stone')
+          .once()
+          .minAffection(0)
+          .maxAffection(500)
+          .cooldown(100)
+          .register()
 
   // 预设：欢迎回家
   event.createPreset(
-    'welcome_letter',
-    '欢迎回家',
-    '主人，欢迎回到温暖的家！我已经为您准备好了茶水，请稍作休息吧。',
-    'contact:default',
-    'contact:letter'
+          'welcome_letter',
+          '欢迎回家',
+          '主人，欢迎回到温暖的家！我已经为您准备好了茶水，请稍作休息吧。',
+          'contact:default',
+          'contact:letter'
   )
-    .trigger('touhou_little_maid_epistalove:player_go_home')
-    .repeat()
-    .minAffection(20)
-    .cooldown(1000)
-    .register()
+          .trigger('touhou_little_maid_epistalove:player_go_home')
+          .repeat()
+          .minAffection(20)
+          .cooldown(1000)
+          .register()
 })
 ```
 
@@ -223,6 +224,8 @@ ServerEvents.playerLoggedIn(event => {
   - `postcard` 或 `parcel` ID 无效：检查数据包 JSON 的 ID 是否正确，是否存在对应的物品或样式。
   - `gifts` 数组长度错误：必须为 1，且仅一个礼物条目。
 
+- 与女仆聊天无法触发送信？
+  - 车万女仆 `Function Call 功能` 配置未启用。
 
 - 邮筒投递不成功？
   - 邮筒是否在家范围内、可达且安全（模组会自动评估）。

@@ -1,5 +1,5 @@
 {
-  "text.autoconfig.touhou_little_maid_epistalove.title": "Touhou Little Maid：Epistalove 配置",
+  "text.autoconfig.touhou_little_maid_epistalove.title": "车万女仆：纸短情长 配置",
 
   "text.autoconfig.touhou_little_maid_epistalove.option.aiLetterConfig": "AI写信配置",
   "text.autoconfig.touhou_little_maid_epistalove.option.aiLetterConfig.creativityTemperatureBoost": "创意温度增强",
@@ -14,6 +14,16 @@
   "text.autoconfig.touhou_little_maid_epistalove.option.aiLetterConfig.minContentLength.@Tooltip": "生成的信件内容最小长度（字符数）",
   "text.autoconfig.touhou_little_maid_epistalove.option.aiLetterConfig.maxGenericPhrases": "套话上限",
   "text.autoconfig.touhou_little_maid_epistalove.option.aiLetterConfig.maxGenericPhrases.@Tooltip": "单封信允许出现的通用套话最大数量",
+  "text.autoconfig.touhou_little_maid_epistalove.option.aiLetterConfig.expressionTechniques": "表达技巧集合",
+  "text.autoconfig.touhou_little_maid_epistalove.option.aiLetterConfig.expressionTechniques.@Tooltip": "用于多样化写作风格的技巧列表（字符串），随机采样使用",
+  "text.autoconfig.touhou_little_maid_epistalove.option.aiLetterConfig.contextTemplates": "情境模板集合",
+  "text.autoconfig.touhou_little_maid_epistalove.option.aiLetterConfig.contextTemplates.@Tooltip": "用于情境描述的模板，需包含两个 %s 占位符（天气、情绪）",
+  "text.autoconfig.touhou_little_maid_epistalove.option.aiLetterConfig.weatherDescriptions": "天气描述集合",
+  "text.autoconfig.touhou_little_maid_epistalove.option.aiLetterConfig.weatherDescriptions.@Tooltip": "用于上下文的天气描述（如：微风、细雨、阳光）",
+  "text.autoconfig.touhou_little_maid_epistalove.option.aiLetterConfig.emotionalStates": "情绪描述集合",
+  "text.autoconfig.touhou_little_maid_epistalove.option.aiLetterConfig.emotionalStates.@Tooltip": "用于上下文的情绪描述（如：温柔、欣喜、宁静）",
+  "text.autoconfig.touhou_little_maid_epistalove.option.aiLetterConfig.creativityTips": "创意提示集合",
+  "text.autoconfig.touhou_little_maid_epistalove.option.aiLetterConfig.creativityTips.@Tooltip": "用于丰富措辞并降低重复的创意提示列表",
 
   "text.autoconfig.touhou_little_maid_epistalove.option.mailDelivery": "邮寄投递",
   "text.autoconfig.touhou_little_maid_epistalove.option.mailDelivery.mailboxSearchRadius": "邮筒搜索半径",

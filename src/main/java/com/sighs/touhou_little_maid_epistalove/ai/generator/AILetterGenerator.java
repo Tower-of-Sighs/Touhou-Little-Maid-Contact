@@ -80,7 +80,7 @@ public class AILetterGenerator implements ILetterGenerator {
 
             @Override
             public void onFunctionCall(Message message, List<LLMMessage> messages, LLMConfig config, LLMClient client) {
-                LOGGER.error("[MaidMail][AI] unexpected function call");
+                LOGGER.warn("[MaidMail][AI] unexpected function call in letter phase; ignored");
                 onFailure(null, new RuntimeException("Unexpected function call"), ErrorCode.JSON_DECODE_ERROR);
             }
         });
@@ -97,6 +97,6 @@ public class AILetterGenerator implements ILetterGenerator {
 
         int enhancedMaxTokens = Math.max(AIConfig.LLM_MAX_TOKEN.get(), 200);
 
-        return new LLMConfig(model, enhancedTemperature, enhancedMaxTokens, maid, ChatType.NORMAL_CHAT);
+        return new LLMConfig(model, enhancedTemperature, enhancedMaxTokens, maid, ChatType.AUTO_GEN_SETTING);
     }
 }

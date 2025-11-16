@@ -7,7 +7,7 @@ version = project.mod_version
 group = project.maven_group
 
 base {
-    archivesName = project.mod_id
+    archivesName = "${mod_id}-fabric-${minecraft_version}"
 }
 
 //loom {
@@ -52,6 +52,11 @@ repositories {
         name = "Modrinth"
         url = "https://api.modrinth.com/maven"
     }
+
+    // OEL
+    maven {
+        url "https://maven.sighs.cc/repository/maven-releases/"
+    }
 }
 
 dependencies {
@@ -62,8 +67,8 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
     // OELib
-    modImplementation "curse.maven:oelib-1319210:7060452"
-    modCompileOnly "curse.maven:oelib-1319210:7060452"
+    modImplementation 'com.mafuyu404.oelib:OELib-fabric-1.20.1:0.0.6'
+    implementation "org.mvel:mvel2:2.5.0.Final"
 
     // Contact
     modImplementation(files("libs/Contact-fabric-1.20.1-1.2.2.jar"))

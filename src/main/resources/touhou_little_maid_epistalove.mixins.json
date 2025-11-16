@@ -5,6 +5,7 @@
   "compatibilityLevel": "JAVA_8",
   "refmap": "touhou_little_maid_epistalove-refmap.json",
   "mixins": [
+    "LLMCallbackMixin",
     "PlayerAdvancementsMixin"
   ],
   "client": [
