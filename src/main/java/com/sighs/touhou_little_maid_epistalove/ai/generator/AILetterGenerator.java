@@ -80,7 +80,7 @@ public class AILetterGenerator implements ILetterGenerator {
 
             @Override
             public void onFunctionCall(Message message, List<LLMMessage> messages, LLMConfig config, LLMClient client) {
-                LOGGER.warn("[MaidMail][AI] unexpected function call");
+                LOGGER.warn("[MaidMail][AI] unexpected function call in letter phase; ignored");
                 onFailure(null, new RuntimeException("Unexpected function call"), ErrorCode.JSON_DECODE_ERROR);
             }
         });

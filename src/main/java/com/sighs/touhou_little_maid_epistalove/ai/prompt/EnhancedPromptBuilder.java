@@ -4,6 +4,7 @@ import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.mojang.logging.LogUtils;
 import com.sighs.touhou_little_maid_epistalove.config.AILetterConfig;
 import com.sighs.touhou_little_maid_epistalove.util.PostcardPackageUtil;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -75,6 +76,9 @@ public class EnhancedPromptBuilder implements IPromptBuilder {
         String creativityBoost = generateCreativityBoost();
         String memoryConstraints = generateMemoryConstraints(maid.getStringUUID());
 
+        String toneInline = (tone != null && !tone.isBlank())
+                ? tone
+                : "请根据玩家对话语义自行生成最合适的风格单词，不要询问玩家；如无明显倾向可随机选择";
 
         return """
                 你是一个女仆，需要给主人写一封信。
@@ -105,7 +109,7 @@ public class EnhancedPromptBuilder implements IPromptBuilder {
                 
                 示例格式（内容要完全不同）：
                 {"title":"独特标题","message":"富有创意的信件内容","postcard_id":"contact:default","parcel_id":"contact:letter"}
-                """.formatted(contextInfo, expressionTechnique, creativityBoost, memoryConstraints, postcardsList, parcelsList, tone);
+                """.formatted(contextInfo, expressionTechnique, creativityBoost, memoryConstraints, postcardsList, parcelsList, toneInline);
     }
 
     @Override
@@ -136,7 +140,15 @@ public class EnhancedPromptBuilder implements IPromptBuilder {
         if (maid.level() instanceof ServerLevel level) {
             try {
                 Biome biome = level.getBiome(maid.blockPosition()).value();
-                String biomeName = biome.toString();
+                ResourceLocation biomeId = level.registryAccess()
+                        .registryOrThrow(Registries.BIOME)
+                        .getKey(biome);
+                String biomeName;
+                if (biomeId != null) {
+                    biomeName = biomeId.toString();
+                } else {
+                    biomeName = "未知区域";
+                }
                 context.append("环境：").append(biomeName).append("\n");
             } catch (Exception e) {
                 context.append("环境：未知区域\n");

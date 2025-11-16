@@ -35,6 +35,6 @@ LetterEvents.registerLetterRules(event => {
 
 PlayerEvents.loggedIn(event => {
     const player = event.player
-    ContactLetterAPI.triggerEvent(player, 'touhou_little_maid_epistalove:player_join')
+    LetterAPI.triggerEvent(player, 'touhou_little_maid_epistalove:player_join')
 })
 
