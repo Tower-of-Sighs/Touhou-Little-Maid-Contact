@@ -129,11 +129,12 @@ public class EnhancedPromptBuilder implements IPromptBuilder {
     private String generateContextInfo(EntityMaid maid, ServerPlayer owner) {
         StringBuilder context = new StringBuilder();
 
-        LocalDateTime now = LocalDateTime.now();
-        String timeDesc = getTimeDescription(now);
-        context.append("时间：").append(timeDesc).append("（").append(now.format(DateTimeFormatter.ofPattern("HH:mm"))).append("）\n");
-
         if (maid.level() instanceof ServerLevel level) {
+            LocalDateTime now = getMinecraftDateTime(level);
+            String timeDesc = getTimeDescription(now);
+            context.append("时间：").append(timeDesc).append("（").append(now.format(DateTimeFormatter.ofPattern("HH:mm"))).append("）\n");
+
+
             try {
                 Biome biome = level.getBiome(maid.blockPosition()).value();
                 ResourceLocation biomeId = level.registryAccess()
@@ -149,17 +150,16 @@ public class EnhancedPromptBuilder implements IPromptBuilder {
             } catch (Exception e) {
                 context.append("环境：未知区域\n");
             }
-        }
 
         int affection = maid.getFavorability();
         String affectionDesc = affection > 80 ? "非常亲密" : affection > 60 ? "亲密" : affection > 40 ? "友好" : "普通";
         context.append("关系：").append(affectionDesc).append("（好感度").append(affection).append("）\n");
 
-        String weatherPhrase = computeWeatherPhrase(maid, now);
+            String weatherPhrase = computeWeatherPhrase(maid);
         String emotion = randomPick(getConfiguredOrDefault(ModConfig.get().aiLetterConfig.emotionalStates, EMOTIONAL_STATES));
         String template = randomPick(getConfiguredOrDefault(ModConfig.get().aiLetterConfig.contextTemplates, CONTEXT_TEMPLATES));
         context.append("氛围：").append(String.format(template, weatherPhrase, emotion));
-
+        }
         return context.toString();
     }
 
@@ -269,10 +269,13 @@ public class EnhancedPromptBuilder implements IPromptBuilder {
     }
 
     // 根据类别+昼夜，从配置中筛选意象词并随机组合
-    private String computeWeatherPhrase(EntityMaid maid, LocalDateTime now) {
+    private String computeWeatherPhrase(EntityMaid maid) {
         WeatherCategory category = computeWeatherCategory(maid);
-        boolean night = isNight(now);
+        boolean night = false;
+        if (maid.level() instanceof ServerLevel level) {
+            night = level.isNight();
 
+        }
         List<String> configured = getConfiguredOrDefault(ModConfig.get().aiLetterConfig.weatherDescriptions, WEATHER_DESCRIPTIONS);
         List<String> filtered = new ArrayList<>();
 
@@ -311,6 +314,7 @@ public class EnhancedPromptBuilder implements IPromptBuilder {
             return picks.get(0);
         }
         return picks.get(0) + "与" + picks.get(1);
+
     }
 
     private boolean containsAny(String s, String... keys) {
@@ -330,8 +334,13 @@ public class EnhancedPromptBuilder implements IPromptBuilder {
         return copy.subList(0, n);
     }
 
-    private boolean isNight(LocalDateTime dt) {
-        int h = dt.getHour();
-        return h < 6 || h >= 20;
+    private LocalDateTime getMinecraftDateTime(ServerLevel level) {
+        long dayTime = level.getDayTime() % 24000;
+
+        int hour = (int) ((dayTime / 1000 + 6) % 24);
+        int minute = (int) ((dayTime % 1000) * 60 / 1000);
+
+        return LocalDateTime.of(2024, 1, 1, hour, minute);
     }
+
 }
