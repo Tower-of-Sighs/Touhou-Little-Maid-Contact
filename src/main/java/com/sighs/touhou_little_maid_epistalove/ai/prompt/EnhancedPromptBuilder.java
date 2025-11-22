@@ -1,6 +1,7 @@
 package com.sighs.touhou_little_maid_epistalove.ai.prompt;
 
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
+import com.github.tartaricacid.touhoulittlemaid.ai.manager.entity.MaidAIChatManager;
 import com.mojang.logging.LogUtils;
 import com.sighs.touhou_little_maid_epistalove.config.AILetterConfig;
 import com.sighs.touhou_little_maid_epistalove.util.PostcardPackageUtil;
@@ -76,10 +77,24 @@ public class EnhancedPromptBuilder implements IPromptBuilder {
                 ? tone
                 : "请根据玩家对话语义自行生成最合适的风格单词，不要询问玩家；如无明显倾向可随机选择";
 
+        MaidAIChatManager chatManager = maid.getAiChatManager();
+        String personaSection = "";
+        if (AILetterConfig.ENABLE_CUSTOM_PERSONA.get()) {
+            String cs = chatManager.customSetting;
+            if (cs != null && !cs.isBlank()) {
+                personaSection = "【人设设定】\n" + cs + "\n\n";
+            }
+        }
+        String nameRuleSection = "";
+        String ownerAlias = chatManager.ownerName;
+        if (ownerAlias != null && !ownerAlias.isBlank()) {
+            nameRuleSection = "【称呼规范】\n必须使用『" + ownerAlias + "』称呼主人，不得使用其它称谓。\n\n";
+        }
+
         return """
                 你是一个女仆，需要给主人写一封信。
                 
-                【当前情境】
+                %s%s【当前情境】
                 %s
                 
                 【表达技巧】
@@ -105,7 +120,7 @@ public class EnhancedPromptBuilder implements IPromptBuilder {
                 
                 示例格式（内容要完全不同）：
                 {"title":"独特标题","message":"富有创意的信件内容","postcard_id":"contact:default","parcel_id":"contact:letter"}
-                """.formatted(contextInfo, expressionTechnique, creativityBoost, memoryConstraints, postcardsList, parcelsList, toneInline);
+                """.formatted(personaSection, nameRuleSection, contextInfo, expressionTechnique, creativityBoost, memoryConstraints, postcardsList, parcelsList, toneInline);
     }
 
     @Override
@@ -311,7 +326,7 @@ public class EnhancedPromptBuilder implements IPromptBuilder {
             return night ? "月光与微风" : "阳光与微风";
         }
         if (picks.size() == 1) {
-            return picks.getFirst();
+            return picks.get(0);
         }
         return picks.get(0) + "与" + picks.get(1);
 

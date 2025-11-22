@@ -12,6 +12,7 @@ public class AILetterConfig {
     public static final int DEFAULT_MEMORY_SIZE = 10;
     public static final boolean DEFAULT_ENABLE_CONTEXT_ENRICHMENT = true;
     public static final boolean DEFAULT_ENABLE_QUALITY_FILTER = true;
+    public static final boolean DEFAULT_ENABLE_CUSTOM_PERSONA = true;
     public static final int DEFAULT_MIN_CONTENT_LENGTH = 10;
     public static final int DEFAULT_MAX_GENERIC_PHRASES = 2;
 
@@ -21,6 +22,7 @@ public class AILetterConfig {
     public static final ModConfigSpec.BooleanValue ENABLE_QUALITY_FILTER;
     public static final ModConfigSpec.IntValue MIN_CONTENT_LENGTH;
     public static final ModConfigSpec.IntValue MAX_GENERIC_PHRASES;
+    public static final ModConfigSpec.BooleanValue ENABLE_CUSTOM_PERSONA;
 
     public static final ModConfigSpec.ConfigValue<List<? extends String>> EXPRESSION_TECHNIQUES;
     public static final ModConfigSpec.ConfigValue<List<? extends String>> CONTEXT_TEMPLATES;
@@ -57,6 +59,11 @@ public class AILetterConfig {
                 .comment("Whether to enable the quality filter to block low-quality or inappropriate content")
                 .translation(translateKey("enable_quality_filter"))
                 .define("enable_quality_filter", true);
+
+        ENABLE_CUSTOM_PERSONA = BUILDER
+                .comment("Inject maid's custom persona from AI chat settings into the system prompt")
+                .translation(translateKey("enable_custom_persona"))
+                .define("enable_custom_persona", true);
 
         MIN_CONTENT_LENGTH = BUILDER
                 .comment("Minimum length of generated letter content (characters) to avoid being too short")

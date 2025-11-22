@@ -6,6 +6,7 @@ import com.sighs.touhou_little_maid_epistalove.api.letter.ILetterRule;
 import com.sighs.touhou_little_maid_epistalove.api.trigger.ITriggerManager;
 import com.sighs.touhou_little_maid_epistalove.trigger.TriggerManager;
 import net.minecraft.advancements.Advancement;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -110,7 +111,14 @@ public class LetterRule implements ILetterRule {
 
     @Override
     public void generateLetter(ServerPlayer owner, EntityMaid maid, Consumer<ItemStack> callback) {
-        generator.generate(owner, maid, callback);
+        CompoundTag ctx = null;
+        for (ResourceLocation tid : triggers) {
+            if (TRIGGER_MANAGER.hasTriggered(owner, tid)) {
+                ctx = TRIGGER_MANAGER.getTriggerContext(owner, tid);
+                break;
+            }
+        }
+        generator.generateWithContext(owner, maid, ctx, callback);
     }
 
     @Override

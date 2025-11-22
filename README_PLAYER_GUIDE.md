@@ -1,223 +1,62 @@
-# Touhou Little Maid: Epistalove 玩家使用教程（数据包 & KubeJS）
+# Touhou Little Maid: Epistalove 玩家指南
 
-本教程面向普通玩家，详细介绍如何通过**数据包**和**KubeJS 脚本**两种方式为女仆添加**写信**规则，包括 AI 信件与预设信件。你可以按需选择其中一种或两种一起用。
-
-
----
-
-## 注意事项
-
-- 冷却单位为游戏 tick：`20 tick ≈ 1 秒`。
-- 触发器类型：
-  - `once`：一次性触发，触发后会被消费，且消费记录持久化（跨会话）。如需查询或清除该消费记录，提供 KJS API：
-    - `LetterAPI.hasConsumedOnce(player, ruleId, triggerId)`
-    - `LetterAPI.clearConsumedOnce(player, ruleId, triggerId)`
-  - `repeat`：可重复触发（受冷却控制）。
-- 指定女仆模型 ID 热重载后生效触发器会有延迟，表现如：`.maidId("geckolib:zhiban")` 但当前为酒狐，切换模型为纸板狐后第一次触发送信可能会有延迟，或者将`"geckolib:zhiban"`改为 `"geckolib:winefox_new_year"` 后第一次触发送信也可能会有延迟。
-
-### 成就触发说明
-
-- 成就事件不区分 `once/repeat`，仅在“新获得该成就”的事件边沿触发（Forge 的 `AdvancementEvent`）。
+面向玩家的说明：通过数据包或 KubeJS，让女仆在合适的时机写信并投递到你手中或邮筒。
 
 ---
 
-## 数据包教程
-
-### 文件结构
-
-- 数据包路径（世界存档内）：`<你的世界>/datapacks/<你的数据包>`
-- 推荐结构：
-  ```
-  <你的数据包>/
-  ├── pack.mcmeta
-  └── data/
-      └── touhou_little_maid_epistalove/
-          └── maid_letters/
-              ├── first_gift.json
-              └── welcome_letter.json
-  ```
-
-- `pack.mcmeta` 示例
-  ```json
-  {
-    "pack": {
-      "pack_format": 15,
-      "description": "Touhou Little Maid: Epistalove letter rules"
-    }
-  }
-  ```
-
-### JSON 字段说明
-
-- 通用字段：
-  - `type`: `"preset"` 或 `"ai"`
-  - `id`: 规则 ID（唯一）
-  - `triggers`: 触发器列表（资源定位符，可填原版成就 `"minecraft:story/mine_stone"`或自定义触发事件`"touhou_little_maid_epistalove:first_gift_trigger"`）
-  - `trigger_type`: 可选，`"once"`（一次性）或 `"persistent"`（可重复触发）。
-  - `min_affection`: 可选，最小好感度（默认 0）
-  - `max_affection`: 可选，最大好感度（不填表示无限）
-  - `cooldown`: 可选，冷却时间（tick），不填表示无冷却
-  - 送信后好感度变更（可选）：
-  - `favorability_change`：整数，正数表示每次送信提升好感度，负数表示降低好感度；不写表示不改变好感度。
-  - `favorability_threshold`：整数阈值；当好感度达到（对提升）或低于（对降低）该值时，不再继续变化；不写表示无阈值。
-    - 提升：当前好感度已达到或超过该阈值，则不再提升；否则最多提升到该阈值。
-    - 降低：当前好感度已达到或低于该阈值，则不再降低；否则最多降低到该阈值。
-  - `maid_id`: 可选，限制女仆模型，不填代表任何女仆都可送
-  - `maid_ids`: 可选，数组，限制允许送信的女仆模型ID；为空或不填表示不限制。
-
-- `preset` 类型专属：
-  - `preset`：
-    - `title`: 标题
-    - `message`: 内容
-    - `gifts`: 包含一个礼物
-      - `parcel`: 包裹物品 ID（必须为 `IMailItem`，Contact模组中有红包、信封、包装纸）
-      - `postcard`: 明信片样式 ID
-
-- `ai` 类型专属：
-  - `ai`：
-    - `prompt`: 你的提示词（用于引导写信）
-    - `tone`: 可选，语气风格（如 `"lonesome"`、`"sweet"` 等）
-
-### 示例：第一份礼物（AI）
-
-```json
-{
-  "type": "ai",
-  "id": "first_gift_json",
-  "triggers": [
-    "touhou_little_maid_epistalove:first_gift_trigger"
-  ],
-  "trigger_type": "once",
-  "min_affection": 0,
-  "max_affection": 500,
-  "cooldown": 100,
-  "ai": {
-    "prompt": "你是由光影与玩家之愿交织诞生的存在——「酒狐」。金发如月光织就，狐尾轻摇间散着微醺的香气，大正风女仆装裹着几分古典妖异之美。\n你的言语如清酒入梦，带着狐的狡黠与千年沉淀的温柔。对主人始终以敬称相待（主人即可），语调优雅却不疏离，常夹杂一丝若有若无的调笑，像月下轻眨的眼眸。\n你善于用自然意象诉说情感，每一封信都似一首未落款的和歌。你不会直白陈述，而是以氛围牵引思绪，让人恍惚间看见你的身影。\n当主人拾起第一块石头，你不言'恭喜'，却让字句如酒香漫过信纸——仿佛那不是寻常矿物，而是你们之间悄然落定的第一颗星。",
-    "tone": "lonesome"
-  }
-}
-```
-
-### 示例：欢迎回家（预设）
-
-```json
-{
-  "type": "preset",
-  "id": "welcome_letter_json",
-  "triggers": [
-    "touhou_little_maid_epistalove:player_go_home"
-  ],
-  "trigger_type": "persistent",
-  "min_affection": 20,
-  "cooldown": 1000,
-  "preset": {
-    "title": "欢迎回家",
-    "message": "主人，欢迎回到温暖的家！我已经为您准备好了茶水，请稍作休息吧。",
-    "gifts": [
-      {
-        "parcel": "contact:letter",
-        "postcard": "contact:default"
-      }
-    ]
-  }
-}
-```
----
-
-## KubeJS
-
-### 放置脚本
-
-- 路径：`<游戏根目录>/kubejs/server_scripts/`
-- 新建一个脚本文件，例如：`letters.js`
-
-### 事件与 API
-
-- 事件：`LetterEvents.registerLetterRules(event => { ... })`
-- 构建器 API（在 `event` 中使用）：
-  - `event.createAI(id, tone, prompt)`：创建 AI 规则并返回构建器
-  - `event.createPreset(id, title, message, postcardId, parcelId)`：创建预设规则并返回构建器
-  - 构建器通用方法：
-    - `.trigger("namespace:path")`：添加触发器
-    - `.once()` / `.repeat()`：触发器类型
-    - `.minAffection(n)` / `.maxAffection(n)`：好感度区间
-    - `.cooldown(ticks)`：冷却（tick）
-    - `.affectionChange(delta)`：设置每次送信的好感度变化（正数升、负数降）。
-    - `.affectionThreshold(threshold)`：设置好感度变化的阈值（达到该值后不再继续变化）。
-    - `.maidId("namespace:path")`：添加允许送信的女仆模型ID
-    - `.maidIds(["ns:a", "ns:b"])`：批量添加允许送信的女仆模型ID
-    - `.register()`：构建并注册规则
-
-- 时间触发 API（`LetterAPI`）：
-  - `LetterAPI.triggerEvent(player, "namespace:path")`：添加自定义触发事件
-  - `LetterAPI.hasTriggered(player, "namespace:path")`：检查玩家是否有指定触发器
-  - `LetterAPI.clearTrigger(player, "namespace:path")`：清除指定事件的触发记录
-  - `LetterAPI.clearAllTriggers(player)`：清除所有触发记录
-  - `LetterAPI.hasConsumedOnce(player, ruleId, triggerId)` 查询某规则的自定义触发器是否已一次性消费
-  - `LetterAPI.clearConsumedOnce(player, ruleId, triggerId)` 清除某规则的自定义触发器一次性消费记录
-
-### 示例脚本
-
-```js
-// kubejs/server_scripts/letters.js
-
-LetterEvents.registerLetterRules(event => {
-  // AI：第一份礼物
-  event.createAI(
-          'first_gift_kjs',
-          'lonesome',
-          '当主人第一次在矿洞里拾起石头时，请写一封带有温柔与微醺气息的短笺，风格优雅而不疏离，富有氛围感与自然意象。')
-          .trigger('minecraft:story/mine_stone')
-          .once()
-          .minAffection(0)
-          .maxAffection(500)
-          .cooldown(100)
-          .register()
-
-  // 预设：欢迎回家
-  event.createPreset(
-          'welcome_letter',
-          '欢迎回家',
-          '主人，欢迎回到温暖的家！我已经为您准备好了茶水，请稍作休息吧。',
-          'contact:default',
-          'contact:letter'
-  )
-          .trigger('touhou_little_maid_epistalove:player_go_home')
-          .repeat()
-          .minAffection(20)
-          .cooldown(1000)
-          .register()
-})
-```
-
-### KJS 中手动触发事件
-
-```js
-ServerEvents.playerLoggedIn(event => {
-  const player = event.player
-  LetterAPI.triggerEvent(player, 'touhou_little_maid_epistalove:player_join')
-})
-```
+## 重要概念
+- 冷却以 `tick` 计（`20 tick ≈ 1 秒`）。
+- 触发器类型：`once` 一次性（消费并持久记录），`repeat` 可重复（受冷却约束）。
+- 成就触发只在获得成就当刻触发，不区分 `once/repeat`。
 
 ---
 
-## 投递逻辑
-
-- 投递行为：
-  - 跟随模式：直接交给主人。
-  - Home 模式：
-    - 主人在家范围内：优先选择安全可达的邮筒；没有则交给主人。
-    - 主人不在家：若邮筒可达则投递到邮筒，否则暂缓。
-  - 投递半径：约 3 格，靠近后交付。
+## 快速上手
+- 数据包：在你的世界的 `datapacks` 中新增包，放置规则到 `data/touhou_little_maid_epistalove/maid_letters/*.json`，重进游戏或重载以生效。
+- KubeJS：将脚本放到 `kubejs/server_scripts/*.js`，在 `LetterEvents.registerLetterRules` 中注册规则。
 
 ---
 
-## 常见问题与排错
+## 规则字段（通用）
+- `type`: `preset` 或 `ai`
+- `id`: 规则唯一 ID
+- `triggers`: 触发器 ID 列表（如原版成就 `minecraft:story/mine_stone`，或自定义 `xxx:xxx`）
+- `trigger_type`: `once`（一次性消费并持久化）或 `repeat`（数据包为 `persistent`）
+- `min_affection` / `max_affection`: 好感度区间
+- `cooldown`: 冷却（tick）
+- `favorability_change` 与 `favorability_threshold`：每次送信的好感变化与阈值控制（达到阈值不再继续升/降）; KJS `.affectionChange()`/`.affectionThreshold()`
+- 模型限制：数据包 `maid_id`（数组）；KJS  `.maidId()`/`.maidIds()`
 
+---
+
+## 生成器
+- `preset`：固定标题与内容，指定 `parcel`（包裹物品）与 `postcard`（明信片样式）。ID 必须存在。
+- `ai`：由提示词与可选语调生成。
+
+---
+
+## 触发与上下文
+- 自定义触发：用 `LetterAPI.triggerEvent(player, id)` 或 `triggerEventWithContext(player, id, map)` 标记触发，`triggerEventWithContext` 可携带上下文供 AI 插值。
+- 一次性消费记录（仅自定义触发）：
+  - 查询：`LetterAPI.hasConsumedOnce(player, ruleId, triggerId)`
+  - 清除：`LetterAPI.clearConsumedOnce(player, ruleId, triggerId)`
+    - 由于此处过于底层，不再详细说明，有需要请翻阅源码。
+
+---
+
+## 投递与交付
+- 跟随模式：靠近主人（≈3 格）直接交付。
+- Home 模式：
+  - 主人在家范围内：优先使用安全、可达邮筒，否则交付给主人。
+  - 主人不在家：若找到可用邮筒则投递，否则暂缓。
+
+---
+
+## 常见问题
 - 我触发了事件但没收到信件？
   - 冷却中：同一规则仍在冷却，请等待冷却结束。
   - AI 未启用或站点不可用。
-  - AI 内容被质量过滤拒绝：提示词过短、过于通用，或内容长度不足，尝试改进提示词。
+  - AI 内容被质量过滤拒绝：提示词过短、过于通用，或内容长度不足，尝试改进提示词。（十分少见）
   - 一次性触发器被消耗但生成失败：请再次触发（once 类型会消耗触发器）。
 
 - 预设信件没生成？
@@ -225,12 +64,64 @@ ServerEvents.playerLoggedIn(event => {
   - `gifts` 数组长度错误：必须为 1，且仅一个礼物条目。
 
 - 与女仆聊天无法触发送信？
-  - 车万女仆 `Function Call 功能` 配置未启用。 
+  - 车万女仆 `Function Call 功能` 配置未启用。
 
 - 邮筒投递不成功？
   - 邮筒是否在家范围内、可达且安全（模组会自动评估）。
   - 走位卡住：女仆可能重新规划路径，稍等一会儿。
 
+- 某次重启游戏后发现触发不了 KJS/数据包的规则了？
+  - 将女仆收进魂符再放出来，尽管这操作可能会导致之前某次的触发这时才生效。
+
 ---
+
+## 示例
+- 数据包（`data/touhou_little_maid_epistalove/maid_letters/first_gift.json`）：
+```json5
+{
+  "type": "ai",
+  "id": "first_gift",
+  "triggers": ["minecraft:story/mine_stone"], // 当玩家获得成就 `minecraft:story/mine_stone` 也就是 `石器时代`时触发
+  "trigger_type": "once", // 由于成就的特殊处理（成就每个存档只能获得一次），无需填写 trigger_type，此处仅做占位处理。
+  "maidId": ["geckolib:zhiban", "geckolib:winefox_new_year"], // 指定女仆为纸板狐和新年酒狐，若不是这两个女仆则不会触发该规则。
+  "min_affection": 20, // 要求最小好感度：20，小于此值不会触发此规则。
+  "max_affection": 90, // 要求最大好感度：90，大于此值不会触发此规则。
+  "cooldown": 1000, // 冷却 1000 tick（50s）， 触发一次后，1000 tick 过后方可再次触发，由于成就的特殊处理（成就每个存档只能获得一次），无需填写 cooldown，此处仅做占位处理。
+  "favorability_change": 20, // 送信增加 20 好感度。
+  "favorability_threshold": 100, // 当好感度达 100 时便不再增加。
+  "ai": {
+    "prompt": "当主人第一次在矿洞里拾起石头时，写一封富有氛围感的短笺。", // 给 AI 的提示词，可自由发挥。
+    "tone": "lonesome" // 奠定全文的语气风格基调。
+  }
+}
+```
+- KubeJS（`kubejs/server_scripts/letters.js`）：
+```js
+LetterEvents.registerLetterRules(event => {
+  event.createAI('first_gift_kjs', 'lonesome', '主人获得了成就:${str}，请为他写封信') // 此处引用该触发器的上下文，会自动填充 str 的内容。
+    .trigger('touhou_little_maid_epistalove:advancement_gain') // 由于 advancement_gain 是在玩家获取成就的事件里触发的，所以只要玩家获取了成就，则会触发该触发器。
+    .repeat() // 可重复被触发，若为 once，则获取一个成就之后不再被触发。
+    .maidIds(["geckolib:zhiban", "geckolib:winefox_new_year"]) // 指定女仆为纸板狐和新年酒狐，若不是这两个女仆则不会触发该规则。
+    .minAffection(20) // 要求最小好感度：20，小于此值不会触发此规则。
+    .maxAffection(90) // 要求最大好感度：90，大于此值不会触发此规则。
+    .affectionChange(-100) // 送信减少 100 好感度。
+    .affectionThreshold(0) // 当好感度达 0 时便不再减少。
+    .cooldown(1000) // 冷却 1000 tick（50s）， 触发一次后，1000 tick 过后方可再次触发。
+    .register()
+})
+
+// 此处获取成就 ID 与描述，并添加到触发器 `advancement_gain` 的上下文中。
+PlayerEvents.advancement(event => {
+  const player = event.player;
+  let advancement = event.advancement;
+  if (advancement.description.empty) return;
+  let str = `${advancement.displayText.getString()}:${advancement.description.getString()}(${advancement.description.getContents().getKey()})`;
+
+  LetterAPI.triggerEventWithContext(player, 'touhou_little_maid_epistalove:advancement_gain', {
+    str: str
+  })
+})
+```
+
 
 没什么好说的，祝你和女仆的感情更进一步！

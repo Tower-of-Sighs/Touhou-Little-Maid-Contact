@@ -114,7 +114,7 @@ public final class PathSafetyPlanner {
     /**
      * 在目标附近生成安全候选点（按优先级：水平方向>对角线>远距离>垂直方向）
      */
-    private static List<BlockPos> generateSafeCandidatesNear(ServerLevel level, BlockPos target, int radius, Mob entity) {
+    public static List<BlockPos> generateSafeCandidatesNear(ServerLevel level, BlockPos target, int radius, Mob entity) {
         List<BlockPos> candidates = new ArrayList<>();
 
         addIfSafe(candidates, level, target.north(), entity);
@@ -143,6 +143,11 @@ public final class PathSafetyPlanner {
 
         candidates.sort(Comparator.comparingDouble(a -> a.distSqr(target)));
         return candidates;
+    }
+
+    public static BlockPos findBestApproachPosition(ServerLevel level, BlockPos target, Mob entity) {
+        List<BlockPos> candidates = generateSafeCandidatesNear(level, target, 3, entity);
+        return candidates.isEmpty() ? null : candidates.get(0);
     }
 
     private static void addIfSafe(List<BlockPos> candidates, ServerLevel level, BlockPos pos, Mob entity) {

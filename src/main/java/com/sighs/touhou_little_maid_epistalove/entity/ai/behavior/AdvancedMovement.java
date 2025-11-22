@@ -76,7 +76,13 @@ public final class AdvancedMovement {
         }
 
         if (direction.y > 0.1) {
-            maid.setDeltaMovement(0, Math.min(0.3, maid.maxUpStep() + 0.1), 0);
+            BlockPos up = maid.blockPosition().above();
+            if (HazardUtil.isSafeForStanding(level, up, maid)) {
+                maid.setDeltaMovement(direction.x * 0.1, Math.min(0.3, maid.maxUpStep() + 0.1), direction.z * 0.1);
+            } else {
+                Vec3 cur = maid.getDeltaMovement();
+                maid.setDeltaMovement(direction.x * 0.1, cur.y, direction.z * 0.1);
+            }
             return true;
         } else if (direction.y < -0.1) {
             BlockPos below = maid.blockPosition().below();
@@ -103,9 +109,10 @@ public final class AdvancedMovement {
         double speedMultiplier = getSpeedMultiplierForPathType(currentPathType);
         moveSpeed *= speedMultiplier;
 
+        Vec3 cur = maid.getDeltaMovement();
         maid.setDeltaMovement(
                 direction.x * moveSpeed,
-                direction.y * moveSpeed * 0.6,
+                cur.y,
                 direction.z * moveSpeed
         );
 

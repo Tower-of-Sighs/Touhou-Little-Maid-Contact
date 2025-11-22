@@ -10,6 +10,8 @@
   "config.touhou_little_maid_epistalove.ai_letter.enable_context_enrichment.tooltip": "Injects dynamic context such as time, environment, and maid status to enrich letter content",
   "config.touhou_little_maid_epistalove.ai_letter.enable_quality_filter": "Enable Quality Filter",
   "config.touhou_little_maid_epistalove.ai_letter.enable_quality_filter.tooltip": "Filters out low-quality or inappropriate generated content",
+  "config.touhou_little_maid_epistalove.ai_letter.enable_custom_persona": "Enable Custom Persona",
+  "config.touhou_little_maid_epistalove.ai_letter.enable_custom_persona.tooltip": "Inject maid's custom persona from AI chat settings into the system prompt",
   "config.touhou_little_maid_epistalove.ai_letter.min_content_length": "Minimum Content Length",
   "config.touhou_little_maid_epistalove.ai_letter.min_content_length.tooltip": "Minimum length of generated letter content (in characters)",
   "config.touhou_little_maid_epistalove.ai_letter.max_generic_phrases": "Generic Phrase Limit",

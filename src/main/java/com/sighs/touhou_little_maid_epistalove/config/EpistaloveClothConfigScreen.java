@@ -60,6 +60,14 @@ public final class EpistaloveClothConfigScreen {
                 .setSaveConsumer(AILetterConfig.ENABLE_QUALITY_FILTER::set)
                 .build());
 
+        aiLetter.addEntry(entry.startBooleanToggle(
+                        Component.translatable("config.touhou_little_maid_epistalove.ai_letter.enable_custom_persona"),
+                        AILetterConfig.ENABLE_CUSTOM_PERSONA.get())
+                .setDefaultValue(AILetterConfig.DEFAULT_ENABLE_CUSTOM_PERSONA)
+                .setTooltip(Component.translatable("config.touhou_little_maid_epistalove.ai_letter.enable_custom_persona.tooltip"))
+                .setSaveConsumer(AILetterConfig.ENABLE_CUSTOM_PERSONA::set)
+                .build());
+
         aiLetter.addEntry(entry.startIntField(
                         Component.translatable("config.touhou_little_maid_epistalove.ai_letter.min_content_length"),
                         AILetterConfig.MIN_CONTENT_LENGTH.get())
