@@ -5,6 +5,9 @@
     "minecraft:story/mine_stone"
   ],
   "trigger_type": "once",
+  "maidId": [
+    "winefox_new_year"
+  ],
   "min_affection": 0,
   "max_affection": 500,
   "cooldown": 100,
