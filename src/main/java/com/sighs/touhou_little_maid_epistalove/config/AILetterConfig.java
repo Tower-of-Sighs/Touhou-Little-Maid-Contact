@@ -12,6 +12,7 @@ public class AILetterConfig {
     public static final int DEFAULT_MEMORY_SIZE = 10;
     public static final boolean DEFAULT_ENABLE_CONTEXT_ENRICHMENT = true;
     public static final boolean DEFAULT_ENABLE_QUALITY_FILTER = true;
+    public static final boolean DEFAULT_ENABLE_CUSTOM_PERSONA = true;
     public static final int DEFAULT_MIN_CONTENT_LENGTH = 10;
     public static final int DEFAULT_MAX_GENERIC_PHRASES = 2;
 
@@ -21,6 +22,7 @@ public class AILetterConfig {
     public static final ForgeConfigSpec.BooleanValue ENABLE_QUALITY_FILTER;
     public static final ForgeConfigSpec.IntValue MIN_CONTENT_LENGTH;
     public static final ForgeConfigSpec.IntValue MAX_GENERIC_PHRASES;
+    public static final ForgeConfigSpec.BooleanValue ENABLE_CUSTOM_PERSONA;
 
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> EXPRESSION_TECHNIQUES;
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> CONTEXT_TEMPLATES;
@@ -47,6 +49,10 @@ public class AILetterConfig {
         ENABLE_QUALITY_FILTER = BUILDER
                 .comment("是否启用内容质量过滤器，自动过滤低质量或不当内容")
                 .define("enable_quality_filter", DEFAULT_ENABLE_QUALITY_FILTER);
+
+        ENABLE_CUSTOM_PERSONA = BUILDER
+                .comment("是否启用自定义人设注入（从AI聊天设置中获取，并加入系统提示）")
+                .define("enable_custom_persona", DEFAULT_ENABLE_CUSTOM_PERSONA);
 
         MIN_CONTENT_LENGTH = BUILDER
                 .comment("生成信件内容的最小长度（字符数），防止内容过短")

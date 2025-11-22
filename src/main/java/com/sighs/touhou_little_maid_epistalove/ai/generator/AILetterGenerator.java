@@ -2,6 +2,7 @@ package com.sighs.touhou_little_maid_epistalove.ai.generator;
 
 import com.github.tartaricacid.touhoulittlemaid.ai.manager.entity.LLMCallback;
 import com.github.tartaricacid.touhoulittlemaid.ai.manager.entity.MaidAIChatManager;
+import com.github.tartaricacid.touhoulittlemaid.ai.manager.entity.Player2AppCheck;
 import com.github.tartaricacid.touhoulittlemaid.ai.manager.response.ResponseChat;
 import com.github.tartaricacid.touhoulittlemaid.ai.service.ErrorCode;
 import com.github.tartaricacid.touhoulittlemaid.ai.service.llm.*;
@@ -57,22 +58,33 @@ public class AILetterGenerator implements ILetterGenerator {
 
         MaidAIChatManager chatManager = maid.getAiChatManager();
         LLMSite site = chatManager.getLLMSite();
-        if (site == null || !site.enabled()) {
-            LOGGER.warn("[MaidMail][AI] site not available or disabled");
+        if (site == null) {
+            LOGGER.warn("[MaidMail][AI] site not available");
+            callback.accept(ItemStack.EMPTY);
+            return;
+        }
+        if (!site.enabled()) {
+            if (DefaultLLMSite.PLAYER2.id().equals(site.id())) {
+                Player2AppCheck.checkPlayer2App(owner, () -> startAIChat(owner, maid, context, chatManager, site, callback));
+                return;
+            }
+            LOGGER.warn("[MaidMail][AI] site disabled: {}", site.id());
             callback.accept(ItemStack.EMPTY);
             return;
         }
 
+        startAIChat(owner, maid, context, chatManager, site, callback);
+    }
+
+    private void startAIChat(ServerPlayer owner, EntityMaid maid, CompoundTag context,
+                              MaidAIChatManager chatManager, LLMSite site, Consumer<ItemStack> callback) {
         String system = promptBuilder.buildSystemPrompt(tone, maid, owner);
         String userPrompt = interpolatePrompt(this.prompt, context);
-
         LLMClient client = site.client();
         List<LLMMessage> chat = new ArrayList<>();
         chat.add(LLMMessage.systemChat(maid, system));
         chat.add(LLMMessage.userChat(maid, userPrompt));
-
         LLMConfig config = createEnhancedLLMConfig(chatManager.getLLMModel(), maid);
-
         client.chat(chat, config, new LLMCallback(chatManager, "", 0) {
             @Override
             public void onSuccess(ResponseChat responseChat) {

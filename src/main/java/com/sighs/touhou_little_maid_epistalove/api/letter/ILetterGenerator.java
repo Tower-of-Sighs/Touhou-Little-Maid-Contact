@@ -20,6 +20,11 @@ public interface ILetterGenerator {
 
     /**
      * 生成信件（带上下文）
+     *
+     * @param owner    女仆的主人
+     * @param maid     女仆实体
+     * @param context  触发上下文数据（用于模板变量插值），允许为空
+     * @param callback 生成完成后的回调，参数为生成的信件ItemStack
      */
     default void generateWithContext(ServerPlayer owner, EntityMaid maid, CompoundTag context, Consumer<ItemStack> callback) {
         generate(owner, maid, callback);

@@ -72,7 +72,21 @@ public interface ITriggerManager {
      */
     void clearConsumedOnce(ServerPlayer player, ResourceLocation triggerKey);
 
+    /**
+     * 标记触发器为已触发并附带上下文数据
+     *
+     * @param player    玩家
+     * @param triggerId 触发器ID
+     * @param context   上下文数据（用于变量插值等）
+     */
     void markTriggeredWithContext(ServerPlayer player, ResourceLocation triggerId, CompoundTag context);
 
+    /**
+     * 获取指定触发器最近一次触发时的上下文数据
+     *
+     * @param player    玩家
+     * @param triggerId 触发器ID
+     * @return 上下文数据，若不存在则返回空的CompoundTag（由实现决定）
+     */
     CompoundTag getTriggerContext(ServerPlayer player, ResourceLocation triggerId);
 }

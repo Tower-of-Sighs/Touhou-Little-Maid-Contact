@@ -17,7 +17,7 @@
 
 ### 成就触发说明
 
-- 成就事件不区分 `once/repeat`，仅在“新获得该成就”的事件边沿触发（Forge 的 `AdvancementEvent`）。
+- 成就事件不区分 `once/repeat`，仅在获得成就时触发，若有特殊需求，还请使用 Kubejs 自行控制。
 
 ---
 
@@ -52,7 +52,7 @@
 - 通用字段：
   - `type`: `"preset"` 或 `"ai"`
   - `id`: 规则 ID（唯一）
-  - `triggers`: 触发器列表（资源定位符，可填原版成就 `"minecraft:story/mine_stone"`或自定义触发事件`"touhou_little_maid_epistalove:first_gift_trigger"`）
+  - `triggers`: 触发器列表（资源标识符，可填原版成就 `"minecraft:story/mine_stone"`或自定义触发事件`"touhou_little_maid_epistalove:first_gift_trigger"`）
   - `trigger_type`: 可选，`"once"`（一次性）或 `"persistent"`（可重复触发）。
   - `min_affection`: 可选，最小好感度（默认 0）
   - `max_affection`: 可选，最大好感度（不填表示无限）

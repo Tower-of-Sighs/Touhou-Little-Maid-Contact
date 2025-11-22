@@ -10,6 +10,8 @@
   "config.touhou_little_maid_epistalove.ai_letter.enable_context_enrichment.tooltip": "注入时间、环境、女仆状态等动态信息以丰富内容",
   "config.touhou_little_maid_epistalove.ai_letter.enable_quality_filter": "启用质量过滤",
   "config.touhou_little_maid_epistalove.ai_letter.enable_quality_filter.tooltip": "过滤低质量或不当的生成内容",
+  "config.touhou_little_maid_epistalove.ai_letter.enable_custom_persona": "启用自定义人设",
+  "config.touhou_little_maid_epistalove.ai_letter.enable_custom_persona.tooltip": "在系统提示中注入女仆的自定义人设（来源于 AI 聊天设置）",
   "config.touhou_little_maid_epistalove.ai_letter.min_content_length": "最小内容长度",
   "config.touhou_little_maid_epistalove.ai_letter.min_content_length.tooltip": "生成的信件内容最小长度（字符数）",
   "config.touhou_little_maid_epistalove.ai_letter.max_generic_phrases": "套话上限",
