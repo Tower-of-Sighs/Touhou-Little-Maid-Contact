@@ -7,6 +7,8 @@ import com.sighs.touhou_little_maid_epistalove.data.LetterRuleRegistry;
 import com.sighs.touhou_little_maid_epistalove.trigger.TriggerManager;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.nbt.CompoundTag;
+import java.util.Map;
 
 public final class LetterAPI {
     private static final ITriggerManager TRIGGER_MANAGER = TriggerManager.getInstance();
@@ -49,6 +51,18 @@ public final class LetterAPI {
      */
     public static void triggerEvent(ServerPlayer player, String triggerId) {
         TRIGGER_MANAGER.markTriggered(player, new ResourceLocation(triggerId));
+    }
+
+    public static void triggerEventWithContext(ServerPlayer player, String triggerId, Map<String, Object> context) {
+        CompoundTag tag = new CompoundTag();
+        if (context != null) {
+            for (Map.Entry<String, Object> e : context.entrySet()) {
+                String k = String.valueOf(e.getKey());
+                String v = String.valueOf(e.getValue());
+                tag.putString(k, v);
+            }
+        }
+        TRIGGER_MANAGER.markTriggeredWithContext(player, new ResourceLocation(triggerId), tag);
     }
 
 

@@ -13,6 +13,7 @@ import com.sighs.touhou_little_maid_epistalove.ai.parser.ILetterParser;
 import com.sighs.touhou_little_maid_epistalove.ai.prompt.IPromptBuilder;
 import com.sighs.touhou_little_maid_epistalove.api.letter.ILetterGenerator;
 import com.sighs.touhou_little_maid_epistalove.config.AILetterConfig;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import org.slf4j.Logger;
@@ -39,6 +40,15 @@ public class AILetterGenerator implements ILetterGenerator {
 
     @Override
     public void generate(ServerPlayer owner, EntityMaid maid, Consumer<ItemStack> callback) {
+        doGenerate(owner, maid, null, callback);
+    }
+
+    @Override
+    public void generateWithContext(ServerPlayer owner, EntityMaid maid, CompoundTag context, Consumer<ItemStack> callback) {
+        doGenerate(owner, maid, context, callback);
+    }
+
+    private void doGenerate(ServerPlayer owner, EntityMaid maid, CompoundTag context, Consumer<ItemStack> callback) {
         if (!AIConfig.LLM_ENABLED.get()) {
             LOGGER.warn("[MaidMail][AI] LLM disabled");
             callback.accept(ItemStack.EMPTY);
@@ -54,11 +64,12 @@ public class AILetterGenerator implements ILetterGenerator {
         }
 
         String system = promptBuilder.buildSystemPrompt(tone, maid, owner);
+        String userPrompt = interpolatePrompt(this.prompt, context);
 
         LLMClient client = site.client();
         List<LLMMessage> chat = new ArrayList<>();
         chat.add(LLMMessage.systemChat(maid, system));
-        chat.add(LLMMessage.userChat(maid, prompt));
+        chat.add(LLMMessage.userChat(maid, userPrompt));
 
         LLMConfig config = createEnhancedLLMConfig(chatManager.getLLMModel(), maid);
 
@@ -84,6 +95,16 @@ public class AILetterGenerator implements ILetterGenerator {
                 onFailure(null, new RuntimeException("Unexpected function call"), ErrorCode.JSON_DECODE_ERROR);
             }
         });
+    }
+
+    private String interpolatePrompt(String p, CompoundTag ctx) {
+        if (ctx == null) return p;
+        String result = p;
+        for (String key : ctx.getAllKeys()) {
+            String val = ctx.getString(key);
+            result = result.replace("${" + key + "}", val);
+        }
+        return result;
     }
 
     @Override

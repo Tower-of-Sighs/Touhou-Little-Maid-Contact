@@ -2,6 +2,7 @@ package com.sighs.touhou_little_maid_epistalove.api.trigger;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.nbt.CompoundTag;
 
 public interface ITriggerManager {
 
@@ -70,4 +71,8 @@ public interface ITriggerManager {
      * @param triggerKey 用于唯一标识
      */
     void clearConsumedOnce(ServerPlayer player, ResourceLocation triggerKey);
+
+    void markTriggeredWithContext(ServerPlayer player, ResourceLocation triggerId, CompoundTag context);
+
+    CompoundTag getTriggerContext(ServerPlayer player, ResourceLocation triggerId);
 }

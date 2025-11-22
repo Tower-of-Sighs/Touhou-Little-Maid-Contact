@@ -13,7 +13,7 @@
     - `LetterAPI.hasConsumedOnce(player, ruleId, triggerId)`
     - `LetterAPI.clearConsumedOnce(player, ruleId, triggerId)`
   - `repeat`：可重复触发（受冷却控制）。
-- 指定女仆模型 ID 热重载后生效触发器会有延迟，表现如：`.maidId("geckolib:zhiban")` 但当前为酒狐，切换模型为纸板狐后第一次触发送信可能会有延迟，或者将`"geckolib:zhiban"`改为 `"geckolib:winefox_new_year"` 后第一次触发送信也可能会有延迟。
+- 修改（注意：不是新增或删除）数据包/KJS脚本后再次触发送信会有延迟，平均时间很长，建议重新进入游戏。
 
 ### 成就触发说明
 

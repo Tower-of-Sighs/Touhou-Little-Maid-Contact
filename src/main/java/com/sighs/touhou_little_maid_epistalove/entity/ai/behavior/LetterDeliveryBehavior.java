@@ -145,10 +145,10 @@ public class LetterDeliveryBehavior implements BehaviorControl<EntityMaid> {
         ServerPlayer owner = (ServerPlayer) maid.getOwner();
 
         if (!homeMode) {
-            // 跟随模式：优先直接交给玩家
             if (owner != null) {
                 targetType = TargetType.OWNER;
-                targetPos = owner.blockPosition();
+                BlockPos approach = PathSafetyPlanner.findBestApproachPosition(level, owner.blockPosition(), maid);
+                targetPos = approach != null ? approach : owner.blockPosition();
             } else {
                 targetType = null;
                 targetPos = null;
@@ -174,7 +174,8 @@ public class LetterDeliveryBehavior implements BehaviorControl<EntityMaid> {
             }
 
             targetType = TargetType.OWNER;
-            targetPos = owner.blockPosition();
+            BlockPos approach = PathSafetyPlanner.findBestApproachPosition(level, owner.blockPosition(), maid);
+            targetPos = approach != null ? approach : owner.blockPosition();
         } else {
             if (bestMailboxOpt.isPresent() && bestMailboxOpt.get().isUsable()) {
                 targetType = TargetType.MAILBOX;
@@ -222,6 +223,19 @@ public class LetterDeliveryBehavior implements BehaviorControl<EntityMaid> {
 
         boolean result = nav.moveTo(target.getX() + 0.5, target.getY(), target.getZ() + 0.5, speed);
         if (!result) {
+            ServerLevel level = (ServerLevel) maid.level();
+            BlockPos[] nearTargets = {
+                    target.north(), target.south(), target.east(), target.west(),
+                    target.above(), target.below()
+            };
+            for (BlockPos nearTarget : nearTargets) {
+                if (HazardUtil.isSafeForStanding(level, nearTarget, maid)) {
+                    boolean nearResult = nav.moveTo(nearTarget.getX() + 0.5, nearTarget.getY(), nearTarget.getZ() + 0.5, speed);
+                    if (nearResult) {
+                        return true;
+                    }
+                }
+            }
             return AdvancedMovement.forceMoveTo(maid, target, speed);
         }
         return true;
