@@ -2,6 +2,7 @@ package com.sighs.touhou_little_maid_epistalove.api.trigger;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.nbt.CompoundTag;
 
 public interface ITriggerManager {
 
@@ -49,7 +50,7 @@ public interface ITriggerManager {
     /**
      * 标记一次性触发器为已消费（持久化，跨会话）
      *
-     * @param player     玩家
+     * @param player 玩家
      * @param triggerKey 用于唯一标识
      */
     void markConsumedOnce(ServerPlayer player, ResourceLocation triggerKey);
@@ -57,7 +58,7 @@ public interface ITriggerManager {
     /**
      * 查询一次性触发器是否已消费（持久化）
      *
-     * @param player     玩家
+     * @param player 玩家
      * @param triggerKey 用于唯一标识
      * @return 是否已消费
      */
@@ -66,8 +67,26 @@ public interface ITriggerManager {
     /**
      * 清除一次性触发器的消费记录（持久化）
      *
-     * @param player     玩家
+     * @param player 玩家
      * @param triggerKey 用于唯一标识
      */
     void clearConsumedOnce(ServerPlayer player, ResourceLocation triggerKey);
+
+    /**
+     * 标记触发器为已触发并附带上下文数据
+     *
+     * @param player    玩家
+     * @param triggerId 触发器ID
+     * @param context   上下文数据（用于变量插值等）
+     */
+    void markTriggeredWithContext(ServerPlayer player, ResourceLocation triggerId, CompoundTag context);
+
+    /**
+     * 获取指定触发器最近一次触发时的上下文数据
+     *
+     * @param player    玩家
+     * @param triggerId 触发器ID
+     * @return 上下文数据，若不存在则返回空的CompoundTag（由实现决定）
+     */
+    CompoundTag getTriggerContext(ServerPlayer player, ResourceLocation triggerId);
 }

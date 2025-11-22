@@ -67,7 +67,7 @@ public interface ILetterRuleBuilder {
 
     /**
      * 设置好感度升/降的阈值（达到该值后不再继续变动）
-     * 
+     *
      * @param threshold 好感度阈值
      */
     ILetterRuleBuilder affectionThreshold(int threshold);

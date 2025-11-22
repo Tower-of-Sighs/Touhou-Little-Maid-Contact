@@ -7,6 +7,8 @@ import com.sighs.touhou_little_maid_epistalove.data.LetterRuleRegistry;
 import com.sighs.touhou_little_maid_epistalove.trigger.TriggerManager;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.nbt.CompoundTag;
+import java.util.Map;
 
 public final class LetterAPI {
     private static final ITriggerManager TRIGGER_MANAGER = TriggerManager.getInstance();
@@ -51,6 +53,25 @@ public final class LetterAPI {
         TRIGGER_MANAGER.markTriggered(player, new ResourceLocation(triggerId));
     }
 
+    /**
+     * 触发玩家事件（带上下文）
+     *
+     * @param player    玩家
+     * @param triggerId 触发器ID字符串
+     * @param context   上下文键值对，将被序列化为CompoundTag；允许为空
+     */
+    public static void triggerEventWithContext(ServerPlayer player, String triggerId, Map<String, Object> context) {
+        CompoundTag tag = new CompoundTag();
+        if (context != null) {
+            for (Map.Entry<String, Object> e : context.entrySet()) {
+                String k = String.valueOf(e.getKey());
+                String v = String.valueOf(e.getValue());
+                tag.putString(k, v);
+            }
+        }
+        TRIGGER_MANAGER.markTriggeredWithContext(player, new ResourceLocation(triggerId), tag);
+    }
+
 
     /**
      * 检查玩家是否有指定触发器
@@ -83,13 +104,26 @@ public final class LetterAPI {
     }
 
 
-    // 查询一次性消费（自定义触发器）
+    /**
+     * 查询一次性消费（自定义触发器）
+     *
+     * @param player    玩家
+     * @param ruleId    规则ID（用于组成唯一键）
+     * @param triggerId 触发器ID（用于组成唯一键）
+     * @return 是否已消费
+     */
     public static boolean hasConsumedOnce(ServerPlayer player, String ruleId, String triggerId) {
         ResourceLocation key = makeCustomConsumeKey(ruleId, triggerId);
         return TRIGGER_MANAGER.hasConsumedOnce(player, key);
     }
 
-    // 清除一次性消费（自定义触发器）
+    /**
+     * 清除一次性消费（自定义触发器）
+     *
+     * @param player    玩家
+     * @param ruleId    规则ID
+     * @param triggerId 触发器ID
+     */
     public static void clearConsumedOnce(ServerPlayer player, String ruleId, String triggerId) {
         ResourceLocation key = makeCustomConsumeKey(ruleId, triggerId);
         TRIGGER_MANAGER.clearConsumedOnce(player, key);

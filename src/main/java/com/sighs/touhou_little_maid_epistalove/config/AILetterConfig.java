@@ -22,6 +22,9 @@ public class AILetterConfig {
     public boolean enableQualityFilter = true;
 
     @ConfigEntry.Gui.Tooltip
+    public boolean enableCustomPersona = true;
+
+    @ConfigEntry.Gui.Tooltip
     @ConfigEntry.BoundedDiscrete(min = 5, max = 50)
 
     public int minContentLength = 10;
